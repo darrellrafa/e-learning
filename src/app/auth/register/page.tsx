@@ -1,7 +1,61 @@
+'use client';
+
 import type { NextPage } from 'next';
 import Link from 'next/link';
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 const REGISTER: NextPage = () => {
+  const router = useRouter();
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+
+    if (!username.trim() || !password.trim() || !confirmPassword.trim()) {
+      setError('Please fill in all fields.');
+      return;
+    }
+
+    if (username.trim().length < 3) {
+      setError('Username must be at least 3 characters.');
+      return;
+    }
+
+    if (password.length < 5) {
+      setError('Password must be at least 5 characters.');
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setError('Passwords do not match. Please try again!');
+      return;
+    }
+
+    setIsLoading(true);
+
+    // Simulate network delay
+    await new Promise((res) => setTimeout(res, 600));
+
+    // Save new user to localStorage (dummy register)
+    const displayName = username.trim().charAt(0).toUpperCase() + username.trim().slice(1);
+    const avatarColors = ['#F2C296', '#A8D8EA', '#FFD700', '#B5EAD7', '#FFDAC1', '#C7CEEA'];
+    const randomColor = avatarColors[Math.floor(Math.random() * avatarColors.length)];
+
+    localStorage.setItem('dummy_username', displayName);
+    localStorage.setItem('dummy_avatar_color', randomColor);
+    localStorage.setItem('dummy_avatar_type', 'classic');
+    localStorage.setItem('dummy_logged_in', 'true');
+
+    // Redirect to onboarding flow
+    router.push('/onboarding/welcome');
+  };
+
   return (
     <div className="h-screen bg-[#6D40AA] flex flex-col justify-end relative font-sans overflow-hidden">
       
@@ -20,46 +74,64 @@ const REGISTER: NextPage = () => {
           
           {/* Tabs */}
           <div className="flex px-10 relative z-20 translate-y-[2px]">
-            {/* INACTIVE: SING IN tab */}
+            {/* INACTIVE: SIGN IN tab */}
             <Link 
               href="/auth/login"
               className="bg-[#CFCBD4] text-[#938D9A] font-extrabold text-[13px] tracking-widest px-8 py-4 rounded-t-3xl shadow-sm block hover:bg-[#c2bdc6] transition-colors"
             >
-              SING IN
+              SIGN IN
             </Link>
             
-            {/* ACTIVE: SING UP tab */}
+            {/* ACTIVE: SIGN UP tab */}
             <div className="bg-white text-[#382654] font-extrabold text-[13px] tracking-widest px-8 py-4 rounded-t-3xl ml-1 z-10">
-              SING UP
+              SIGN UP
             </div>
           </div>
 
           {/* Form Container */}
-          <div className="bg-white w-full rounded-t-[3rem] p-8 pt-12 flex flex-col gap-5 relative z-10 min-h-[70vh]">
-            
+          <form
+            onSubmit={handleRegister}
+            className="bg-white w-full rounded-t-[3rem] p-8 pt-12 flex flex-col gap-5 relative z-10 min-h-[70vh]"
+          >
             <input 
               type="text" 
-              placeholder="User Name" 
+              placeholder="User Name"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
               className="w-full border-2 border-[#F3F3F3] rounded-[2rem] px-6 py-4 outline-none focus:border-[#FFCB05] transition-colors font-bold text-[#6D637A] placeholder:text-[#AAA4B3]"
             />
             
             <input 
               type="password" 
-              placeholder="Password" 
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
               className="w-full border-2 border-[#F3F3F3] rounded-[2rem] px-6 py-4 outline-none focus:border-[#FFCB05] transition-colors font-bold text-[#6D637A] placeholder:text-[#AAA4B3]"
             />
 
             <input 
               type="password" 
-              placeholder="Confirm Password" 
+              placeholder="Confirm Password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
               className="w-full border-2 border-[#F3F3F3] rounded-[2rem] px-6 py-4 outline-none focus:border-[#FFCB05] transition-colors font-bold text-[#6D637A] placeholder:text-[#AAA4B3]"
             />
 
-            <button className="w-full bg-[#FFCC00] text-white font-extrabold text-[15px] tracking-wider rounded-[2rem] py-4 mt-6 hover:bg-[#F2C003] transition-colors">
-              SING UP
+            {/* Error Message */}
+            {error && (
+              <div className="bg-red-50 border-2 border-red-200 rounded-2xl px-5 py-3 text-center">
+                <p className="text-red-500 font-bold text-sm">{error}</p>
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="w-full bg-[#FFCC00] text-white font-extrabold text-[15px] tracking-wider rounded-[2rem] py-4 mt-4 hover:bg-[#F2C003] transition-all disabled:opacity-60 disabled:cursor-not-allowed active:scale-95"
+            >
+              {isLoading ? 'Creating account...' : 'SIGN UP'}
             </button>
-            
-          </div>
+          </form>
         </div>
       </div>
     </div>
