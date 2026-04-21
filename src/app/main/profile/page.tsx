@@ -3,33 +3,45 @@
 import type { NextPage } from 'next';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import BottomNavigation from '../../../components/BottomNavigation';
 import ProfileHeader from '../../../components/ProfileHeader';
 import DynamicAvatar from '../../../components/DynamicAvatar';
+import { account } from '../../../lib/appwrite';
 
 const ProfilePage: NextPage = () => {
   const [username, setUsername] = useState<string>('Loading...');
   const [avatarColor, setAvatarColor] = useState<string>('#F2C296');
   const [avatarType, setAvatarType] = useState<string>('classic');
 
+  const router = useRouter();
+
   useEffect(() => {
-    // Read from localStorage for frontend mode
-    const storedName = localStorage.getItem('dummy_username') || 'fulan';
-    const storedColor = localStorage.getItem('dummy_avatar_color') || '#F2C296';
-    const storedType = localStorage.getItem('dummy_avatar_type') || 'classic';
-    setUsername(storedName);
-    setAvatarColor(storedColor);
-    setAvatarType(storedType);
-    
-    // Listen for storage changes in other tabs/windows
-    const handleStorage = () => {
-      setUsername(localStorage.getItem('dummy_username') || 'fulan');
-      setAvatarColor(localStorage.getItem('dummy_avatar_color') || '#F2C296');
-      setAvatarType(localStorage.getItem('dummy_avatar_type') || 'classic');
+    // Read from Appwrite account session
+    const fetchUser = async () => {
+      try {
+        const user = await account.get();
+        setUsername(user.name || 'Fulan');
+        
+        // Storage lookup for styling fallback
+        setAvatarColor(localStorage.getItem('dummy_avatar_color') || '#F2C296');
+        setAvatarType(localStorage.getItem('dummy_avatar_type') || 'classic');
+      } catch (err) {
+        console.error('Session not found', err);
+        router.push('/auth/login');
+      }
     };
-    window.addEventListener('storage', handleStorage);
-    return () => window.removeEventListener('storage', handleStorage);
-  }, []);
+    fetchUser();
+  }, [router]);
+
+  const handleLogout = async () => {
+    try {
+      await account.deleteSession('current');
+      router.push('/auth/login');
+    } catch(err) {
+      console.error(err);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#F0FDF4] font-sans pb-24 relative overflow-hidden flex flex-col items-center">
@@ -88,9 +100,12 @@ const ProfilePage: NextPage = () => {
 
             {/* Action Buttons */}
             <div className="flex justify-center mt-10 gap-3">
-              <Link href="/main/profile/edit" className="bg-[#FF9500] text-white px-10 py-4 rounded-full text-[16px] font-black tracking-widest hover:bg-[#FFAD33] transition-all shadow-[0_4px_0_#D17600] active:translate-y-1 active:shadow-none text-center">
-                🖍️ Edit Profile
+              <Link href="/main/profile/edit" className="bg-[#FF9500] text-white px-8 py-3 rounded-full text-[14px] font-black tracking-widest hover:bg-[#FFAD33] transition-all shadow-[0_4px_0_#D17600] active:translate-y-1 active:shadow-none text-center">
+                🖍️ Edit
               </Link>
+              <button onClick={handleLogout} className="bg-[#EF4444] text-white px-8 py-3 rounded-full text-[14px] font-black tracking-widest hover:bg-[#F87171] transition-all shadow-[0_4px_0_#B91C1C] active:translate-y-1 active:shadow-none text-center cursor-pointer">
+                🔌 Logout
+              </button>
             </div>
 
             {/* Divider */}

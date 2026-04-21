@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import DynamicAvatar from './DynamicAvatar';
+import { account } from '../lib/appwrite';
 
 interface ProfileHeaderProps {
   themeTextClass: string;
@@ -17,13 +18,19 @@ export default function ProfileHeader({ themeTextClass }: ProfileHeaderProps) {
   const [avatarType, setAvatarType] = useState<string>('classic');
 
   useEffect(() => {
-    // Read from localStorage for frontend mode
-    const storedName = localStorage.getItem('dummy_username') || 'fulan';
-    const storedColor = localStorage.getItem('dummy_avatar_color') || '#F2C296';
-    const storedType = localStorage.getItem('dummy_avatar_type') || 'classic';
-    setUsername(storedName);
-    setAvatarColor(storedColor);
-    setAvatarType(storedType);
+    const fetchHeaderUser = async () => {
+      try {
+        const user = await account.get();
+        setUsername(user.name || 'Student');
+        
+        // Avatars can still use localStorage temporarily for styling 
+        setAvatarColor(localStorage.getItem('dummy_avatar_color') || '#F2C296');
+        setAvatarType(localStorage.getItem('dummy_avatar_type') || 'classic');
+      } catch(err) {
+        setUsername('Guest');
+      }
+    };
+    fetchHeaderUser();
   }, []);
 
   const toggleHref = pathname?.includes('/dashboard/red')

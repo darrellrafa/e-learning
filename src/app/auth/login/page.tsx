@@ -5,16 +5,12 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
-// Dummy user database (sementara sebelum Firebase)
-const DUMMY_USERS: Record<string, { password: string; displayName: string; avatarColor: string; avatarType: string }> = {
-  'student1': { password: 'password123', displayName: 'Alex', avatarColor: '#F2C296', avatarType: 'classic' },
-  'student2': { password: 'password123', displayName: 'Maya', avatarColor: '#A8D8EA', avatarType: 'cool' },
-  'fulan':    { password: '12345',        displayName: 'Fulan', avatarColor: '#FFD700', avatarType: 'classic' },
-};
+import { account } from '../../../lib/appwrite';
+import { AppwriteException } from 'appwrite';
 
 const LOGIN: NextPage = () => {
   const router = useRouter();
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -23,34 +19,26 @@ const LOGIN: NextPage = () => {
     e.preventDefault();
     setError('');
 
-    if (!username.trim() || !password.trim()) {
+    if (!email.trim() || !password.trim()) {
       setError('Please fill in all fields.');
       return;
     }
 
     setIsLoading(true);
 
-    // Simulate network delay
-    await new Promise((res) => setTimeout(res, 600));
-
-    const user = DUMMY_USERS[username.trim().toLowerCase()];
-    if (!user || user.password !== password) {
-      setError('Wrong username or password. Try again!');
-      setIsLoading(false);
-      return;
-    }
-
-    // Save session to localStorage
-    localStorage.setItem('dummy_username', user.displayName);
-    localStorage.setItem('dummy_avatar_color', user.avatarColor);
-    localStorage.setItem('dummy_avatar_type', user.avatarType);
-    localStorage.setItem('dummy_logged_in', 'true');
-
-    // 🔴 FOR TESTING ONLY: redirect "student1" to the onboarding flow
-    if (username.trim().toLowerCase() === 'student1') {
-      router.push('/onboarding/welcome');
-    } else {
+    try {
+      // 1. Create Appwrite session
+      await account.createEmailPasswordSession(email.trim(), password);
+      
+      // 2. Redirect to dashboard
       router.push('/main/dashboard');
+    } catch (err: any) {
+      if (err instanceof AppwriteException) {
+        setError(err.message);
+      } else {
+        setError('An unexpected error occurred. Try again!');
+      }
+      setIsLoading(false);
     }
   };
 
@@ -92,10 +80,10 @@ const LOGIN: NextPage = () => {
             className="bg-white w-full rounded-t-[3rem] p-8 pt-14 flex flex-col gap-6 relative z-10 min-h-[70vh]"
           >
             <input 
-              type="text" 
-              placeholder="User Name"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              type="email" 
+              placeholder="Email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               className="w-full border-2 border-[#F3F3F3] rounded-[2rem] px-6 py-4 outline-none focus:border-[#FFCB05] transition-colors font-bold text-[#6D637A] placeholder:text-[#AAA4B3]"
             />
             
@@ -114,12 +102,7 @@ const LOGIN: NextPage = () => {
               </div>
             )}
 
-            {/* Dummy account hint */}
-            <div className="bg-[#F9F7FF] border-2 border-[#E8E0F5] rounded-2xl px-5 py-3">
-              <p className="text-[#9E8EC1] font-bold text-[11px] tracking-wide text-center">
-                💡 Demo: username <span className="text-[#6D40AA]">fulan</span> / password <span className="text-[#6D40AA]">12345</span>
-              </p>
-            </div>
+            {/* Removed Dummy account hint */}
 
             <button
               type="submit"

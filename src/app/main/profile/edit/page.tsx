@@ -3,6 +3,7 @@
 import type { NextPage } from 'next';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { account } from '../../../../lib/appwrite';
 
 // Character Component to keep code clean
 const CharacterPreview = ({ type, color, size = "large" }: { type: string, color: string, size?: "small" | "large" }) => {
@@ -73,26 +74,41 @@ const EditProfilePage: NextPage = () => {
   const colorOptions = ['#F2C296', '#FFCB05', '#93D334', '#7DA5F5', '#FF7F7F', '#BB86FC'];
 
   useEffect(() => {
-    const storedName = localStorage.getItem('dummy_username') || 'fulan';
-    const storedColor = localStorage.getItem('dummy_avatar_color') || '#F2C296';
-    const storedType = localStorage.getItem('dummy_avatar_type') || 'classic';
-    setUsername(storedName);
-    setAvatarColor(storedColor);
-    setCharType(storedType);
-    
-    setTimeout(() => setLoading(false), 600);
+    const init = async () => {
+      try {
+        const user = await account.get();
+        setUsername(user.name || 'Student');
+      } catch (err) {
+        setUsername('Guest');
+      }
+      
+      const storedColor = localStorage.getItem('dummy_avatar_color') || '#F2C296';
+      const storedType = localStorage.getItem('dummy_avatar_type') || 'classic';
+      setAvatarColor(storedColor);
+      setCharType(storedType);
+      
+      setTimeout(() => setLoading(false), 500);
+    };
+    init();
   }, []);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!username.trim()) return;
     setSaving(true);
     
-    setTimeout(() => {
-      localStorage.setItem('dummy_username', username.trim());
+    try {
+      // Perbarui nama menggunakan Appwrite Backend
+      await account.updateName(username.trim());
+      
+      // Simpan styling avatar ke localStorage sementara
       localStorage.setItem('dummy_avatar_color', avatarColor);
       localStorage.setItem('dummy_avatar_type', charType);
+      
       router.push('/main/profile');
-    }, 1000);
+    } catch (err) {
+      console.error(err);
+      setSaving(false);
+    }
   };
 
   if (loading) {

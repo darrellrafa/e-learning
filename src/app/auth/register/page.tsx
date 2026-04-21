@@ -4,10 +4,13 @@ import type { NextPage } from 'next';
 import Link from 'next/link';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { account, ID } from '../../../lib/appwrite';
+import { AppwriteException } from 'appwrite';
 
 const REGISTER: NextPage = () => {
   const router = useRouter();
   const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
@@ -17,7 +20,7 @@ const REGISTER: NextPage = () => {
     e.preventDefault();
     setError('');
 
-    if (!username.trim() || !password.trim() || !confirmPassword.trim()) {
+    if (!username.trim() || !email.trim() || !password.trim() || !confirmPassword.trim()) {
       setError('Please fill in all fields.');
       return;
     }
@@ -39,21 +42,29 @@ const REGISTER: NextPage = () => {
 
     setIsLoading(true);
 
-    // Simulate network delay
-    await new Promise((res) => setTimeout(res, 600));
+    try {
+      // 1. Create User in Appwrite
+      await account.create(ID.unique(), email.trim(), password, username.trim());
+      
+      // 2. Automatically log them in after registration
+      await account.createEmailPasswordSession(email.trim(), password);
 
-    // Save new user to localStorage (dummy register)
-    const displayName = username.trim().charAt(0).toUpperCase() + username.trim().slice(1);
-    const avatarColors = ['#F2C296', '#A8D8EA', '#FFD700', '#B5EAD7', '#FFDAC1', '#C7CEEA'];
-    const randomColor = avatarColors[Math.floor(Math.random() * avatarColors.length)];
+      // Save initial avatar preferences to localStorage as a fallback
+      const avatarColors = ['#F2C296', '#A8D8EA', '#FFD700', '#B5EAD7', '#FFDAC1', '#C7CEEA'];
+      const randomColor = avatarColors[Math.floor(Math.random() * avatarColors.length)];
+      localStorage.setItem('dummy_avatar_color', randomColor);
+      localStorage.setItem('dummy_avatar_type', 'classic');
 
-    localStorage.setItem('dummy_username', displayName);
-    localStorage.setItem('dummy_avatar_color', randomColor);
-    localStorage.setItem('dummy_avatar_type', 'classic');
-    localStorage.setItem('dummy_logged_in', 'true');
-
-    // Redirect to onboarding flow
-    router.push('/onboarding/welcome');
+      // 3. Redirect to onboarding flow
+      router.push('/onboarding/welcome');
+    } catch (err: any) {
+      if (err instanceof AppwriteException) {
+        setError(err.message);
+      } else {
+        setError('An unexpected error occurred. Try again!');
+      }
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -95,9 +106,17 @@ const REGISTER: NextPage = () => {
           >
             <input 
               type="text" 
-              placeholder="User Name"
+              placeholder="Display Name"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
+              className="w-full border-2 border-[#F3F3F3] rounded-[2rem] px-6 py-4 outline-none focus:border-[#FFCB05] transition-colors font-bold text-[#6D637A] placeholder:text-[#AAA4B3]"
+            />
+            
+            <input 
+              type="email" 
+              placeholder="Email Address"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               className="w-full border-2 border-[#F3F3F3] rounded-[2rem] px-6 py-4 outline-none focus:border-[#FFCB05] transition-colors font-bold text-[#6D637A] placeholder:text-[#AAA4B3]"
             />
             

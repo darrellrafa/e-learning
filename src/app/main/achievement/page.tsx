@@ -1,53 +1,64 @@
 'use client';
 
 import type { NextPage } from 'next';
+import { useState, useEffect } from 'react';
 import BottomNavigation from '../../../components/BottomNavigation';
 import ProfileHeader from '../../../components/ProfileHeader';
+import { databases, account } from '../../../lib/appwrite';
+import { Query } from 'appwrite';
 
-const achievements = [
-    {
-        title: 'Beginner Math',
-        description: 'Mastered basic addition and subtraction with high accuracy.',
-        progress: 102,
-        total: 220,
-        icon: '➕',
-        color: '#93D334'
-    },
-    {
-        title: 'Daily Streak',
-        description: 'Keep the learning fire alive for 7 consecutive days.',
-        progress: 151,
-        total: 220,
-        icon: '🔥',
-        color: '#FFCB05'
-    },
-    {
-        title: 'Word Master',
-        description: 'Learn over 100 new English vocabularies this month.',
-        progress: 129,
-        total: 220,
-        icon: '📚',
-        color: '#7E52B1'
-    },
-    {
-        title: 'Science Explorer',
-        description: 'Complete all levels in the Universe & Galaxy module.',
-        progress: 181,
-        total: 220,
-        icon: '🚀',
-        color: '#D9A14B'
-    },
-    {
-        title: 'Speed Runner',
-        description: 'Solve 20 questions in less than 5 minutes.',
-        progress: 187,
-        total: 220,
-        icon: '⚡',
-        color: '#5BA885'
-    },
-];
+interface AchievementData {
+    title: string;
+    description: string;
+    progress: number;
+    total: number;
+    icon: string;
+    color: string;
+}
 
 const AchievementPage: NextPage = () => {
+    const [achievements, setAchievements] = useState<AchievementData[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchAchievements = async () => {
+            try {
+                // 1. Dapatkan info user yang sedang login
+                const user = await account.get();
+                
+                // 2. Ambil data pencapaian dari database
+                const dbId = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!;
+                const collId = process.env.NEXT_PUBLIC_APPWRITE_COLLECTION_ACHIEVEMENTS_ID!;
+                
+                const response = await databases.listDocuments(
+                    dbId,
+                    collId,
+                    [
+                        Query.equal('userId', user.$id)
+                    ]
+                );
+
+                // Map results to exactly match UI needs
+                const fetchedData = response.documents.map((doc: any) => ({
+                    title: doc.title,
+                    description: doc.description,
+                    progress: doc.progress,
+                    total: doc.total,
+                    icon: doc.icon,
+                    color: doc.color
+                }));
+
+                setAchievements(fetchedData);
+            } catch (err) {
+                console.error("Gagal mengambil data dari Appwrite:", err);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchAchievements();
+    }, []);
+
     return (
         <div className="min-h-screen bg-[#F0FDF4] font-sans pb-24 relative overflow-hidden flex flex-col items-center">
 
@@ -75,7 +86,19 @@ const AchievementPage: NextPage = () => {
 
                     {/* Achievement List */}
                     <div className="px-4 mt-8 flex flex-col gap-6">
-                        {achievements.map((item, index) => {
+                        {isLoading && (
+                            <div className="flex justify-center p-10">
+                                <span className="animate-pulse text-[#382654] font-bold">Sedang mengambil data... 🚀</span>
+                            </div>
+                        )}
+                        {!isLoading && achievements.length === 0 && (
+                            <div className="flex flex-col items-center p-10 text-center opacity-60">
+                                <span className="text-4xl mb-2">🍃</span>
+                                <p className="text-[#382654] font-bold text-sm">Belum ada achievement yang ditemukan.</p>
+                                <p className="text-[#6D637A] text-xs">Mungkin data di Appwrite masih kosong atau userId tidak cocok.</p>
+                            </div>
+                        )}
+                        {!isLoading && achievements.map((item, index) => {
                             const percentage = (item.progress / item.total) * 100;
                             const isCompleted = percentage >= 100;
 
