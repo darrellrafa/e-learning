@@ -13,6 +13,9 @@ const ProfilePage: NextPage = () => {
   const [username, setUsername] = useState<string>('Loading...');
   const [avatarColor, setAvatarColor] = useState<string>('#F2C296');
   const [avatarType, setAvatarType] = useState<string>('classic');
+  const [exp, setExp] = useState<number>(0);
+  const [level, setLevel] = useState<number>(1);
+  const [nextLevelExp, setNextLevelExp] = useState<number>(400);
 
   const router = useRouter();
 
@@ -26,6 +29,29 @@ const ProfilePage: NextPage = () => {
         // Storage lookup for styling fallback
         setAvatarColor(localStorage.getItem('dummy_avatar_color') || '#F2C296');
         setAvatarType(localStorage.getItem('dummy_avatar_type') || 'classic');
+
+        // Calculate dynamic level based on actual EXP scores
+        const prefs = await account.getPrefs();
+        const localUsername = user.name || 'guest';
+        let currentExp = 0;
+        for (let i = 1; i <= 24; i++) {
+          // Cloud pref first, fallback to localStorage
+          const cloudExp = typeof prefs[`node_${i}_exp`] === 'number' ? prefs[`node_${i}_exp`] : parseInt(prefs[`node_${i}_exp`] || '0');
+          const localExp = parseInt(localStorage.getItem(`${localUsername}_node_${i}_exp`) || '0');
+          const nodeExp = Math.max(cloudExp, localExp);
+          
+          if (nodeExp > 0) {
+            currentExp += nodeExp;
+          } else if (prefs[`node_${i}_completed`] === true || localStorage.getItem(`${localUsername}_node_${i}_completed`) === 'true') {
+            currentExp += 100; // Fallback
+          }
+        }
+        const calculatedLevel = Math.floor(currentExp / 400) + 1;
+        const calculatedNextLevelExp = calculatedLevel * 400;
+
+        setExp(currentExp);
+        setLevel(calculatedLevel);
+        setNextLevelExp(calculatedNextLevelExp);
       } catch (err) {
         console.error('Session not found', err);
         router.push('/auth/login');
@@ -78,7 +104,7 @@ const ProfilePage: NextPage = () => {
                 {username}
               </h2>
               <p className="text-[#87BE32] text-sm font-black mt-1 uppercase tracking-widest">
-                🌟 Level 5 Explorer 🌟
+                🌟 Level {level} Explorer 🌟
               </p>
             </div>
 
@@ -86,12 +112,12 @@ const ProfilePage: NextPage = () => {
             <div className="mt-8 px-2">
               <div className="flex justify-between items-end mb-2">
                 <span className="text-sm font-extrabold text-[#5BA885] tracking-widest">EXPERIENCE</span>
-                <span className="text-[12px] font-extrabold text-[#93D334]">1.250 / 2.000 EXP</span>
+                <span className="text-[12px] font-extrabold text-[#93D334]">{exp.toLocaleString('id-ID')} / {nextLevelExp.toLocaleString('id-ID')} EXP</span>
               </div>
               <div className="w-full h-5 bg-[#F0FDF4] rounded-full overflow-hidden relative shadow-inner border-2 border-[#93D334]/30">
                 <div 
                   className="h-full bg-gradient-to-r from-[#FFD166] to-[#FF9C3A] rounded-full transition-all duration-1000 shadow-sm relative overflow-hidden"
-                  style={{ width: '62.5%' }}
+                  style={{ width: `${Math.min((exp / nextLevelExp) * 100, 100)}%` }}
                 >
                   <div className="absolute top-0 right-0 w-full h-full bg-[linear-gradient(45deg,rgba(255,255,255,0.2)25%,transparent_25%,transparent_50%,rgba(255,255,255,0.2)_50%,rgba(255,255,255,0.2)_75%,transparent_75%,transparent_100%)] bg-[length:20px_20px]" />
                 </div>

@@ -11,9 +11,10 @@ function ScoreContent() {
   const score = searchParams.get('score') || '0';
   const total = searchParams.get('total') || '5';
   const time = searchParams.get('time') || '0';
+  const expEarned = searchParams.get('exp') || Math.round((parseInt(score) / parseInt(total)) * 100).toString();
   const themeParam = searchParams.get('theme');
 
-  const totalExp = Math.round((parseInt(score) / parseInt(total)) * 31) + '+';
+  const totalExp = `+${expEarned}`;
 
   // We change the message dynamically based on the score!
   const isPerfect = parseInt(score) === parseInt(total);

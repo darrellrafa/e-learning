@@ -19,6 +19,8 @@ interface AchievementData {
 const AchievementPage: NextPage = () => {
     const [achievements, setAchievements] = useState<AchievementData[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [exp, setExp] = useState<number>(0);
+    const [nextLevelExp, setNextLevelExp] = useState<number>(400);
 
     useEffect(() => {
         const fetchAchievements = async () => {
@@ -34,20 +36,67 @@ const AchievementPage: NextPage = () => {
                 const response = await databases.listDocuments(
                     dbId,
                     collId,
-                    [
-                        Query.equal('userId', user.$id)
-                    ]
+                    [] // Fetch all global achievements without filtering by userId
                 );
 
-                // Map results to exactly match UI needs
-                const fetchedData = response.documents.map((doc: any) => ({
+                // Deduplicate achievements by title in case of multiple entries
+                let uniqueDocuments = [];
+                const seenTitles = new Set();
+                for (const doc of response.documents) {
+                    if (!seenTitles.has(doc.title)) {
+                        seenTitles.add(doc.title);
+                        uniqueDocuments.push(doc);
+                    }
+                }
+
+                // Fallback achievements if Appwrite collection is empty
+                if (uniqueDocuments.length === 0) {
+                    uniqueDocuments = [
+                        { title: "Great Beginner", description: "Complete your first lesson.", total: 100, icon: "🌱", color: "#93D334" },
+                        { title: "Knowledge Explorer", description: "Collect 500 EXP from various materials.", total: 500, icon: "🧭", color: "#3B82F6" },
+                        { title: "Star Student", description: "Collect 1,000 EXP and become the star of the class.", total: 1000, icon: "🏆", color: "#FFCB05" },
+                        { title: "Master of Knowledge", description: "Reach a total of 2,400 EXP.", total: 2400, icon: "👑", color: "#8B5CF6" }
+                    ];
+                }
+
+                // Calculate dynamic EXP based on actual EXP scores
+                const prefs = await account.getPrefs();
+                const localUsername = user.name || 'guest';
+                let calculatedExp = 0;
+                for (let i = 1; i <= 24; i++) {
+                  // Cloud pref first, fallback to localStorage
+                  const cloudExp = typeof prefs[`node_${i}_exp`] === 'number' ? prefs[`node_${i}_exp`] : parseInt(prefs[`node_${i}_exp`] || '0');
+                  const localExp = parseInt(localStorage.getItem(`${localUsername}_node_${i}_exp`) || '0');
+                  const nodeExp = Math.max(cloudExp, localExp);
+                  
+                  if (nodeExp > 0) {
+                    calculatedExp += nodeExp;
+                  } else if (prefs[`node_${i}_completed`] === true || localStorage.getItem(`${localUsername}_node_${i}_completed`) === 'true') {
+                    calculatedExp += 100; // Fallback
+                  }
+                }
+                const calculatedLevel = Math.floor(calculatedExp / 400) + 1;
+                const calculatedNextLevelExp = calculatedLevel * 400;
+
+                setExp(calculatedExp);
+                setNextLevelExp(calculatedNextLevelExp);
+
+                // Map results to use dynamic EXP for progress
+                const fetchedData = uniqueDocuments.map((doc: any) => ({
                     title: doc.title,
                     description: doc.description,
-                    progress: isAdmin ? doc.total : doc.progress,
+                    progress: Math.min(calculatedExp, doc.total),
                     total: doc.total,
                     icon: doc.icon,
                     color: doc.color
                 }));
+
+                // Sort so completed achievements are at the top
+                fetchedData.sort((a, b) => {
+                    const aCompleted = a.progress >= a.total ? 1 : 0;
+                    const bCompleted = b.progress >= b.total ? 1 : 0;
+                    return bCompleted - aCompleted;
+                });
 
                 setAchievements(fetchedData);
             } catch (err) {
@@ -58,6 +107,7 @@ const AchievementPage: NextPage = () => {
         };
 
         fetchAchievements();
+
     }, []);
 
     return (
@@ -75,28 +125,34 @@ const AchievementPage: NextPage = () => {
                 <div className="bg-white w-full rounded-t-[40px] min-h-[85vh] shadow-[0_-10px_40px_rgba(0,0,0,0.05)] relative overflow-hidden">
 
                     {/* Header Label */}
-                    <div className="px-8 pt-10 pb-2">
-                        <h2 className="text-[#382654] text-xl font-extrabold flex items-center gap-2">
-                            Achievements
-                            <span className="text-sm bg-[#ECF8EC] text-[#5BA885] px-3 py-1 rounded-full font-bold">
-                                {achievements.length}
-                            </span>
-                        </h2>
-                        <p className="text-[#6D637A] text-[13px] font-medium mt-1">Track your legendary milestones</p>
+                    <div className="px-8 pt-10 pb-2 flex justify-between items-center">
+                        <div>
+                            <h2 className="text-[#382654] text-xl font-extrabold flex items-center gap-2">
+                                Achievements
+                                <span className="text-sm bg-[#ECF8EC] text-[#5BA885] px-3 py-1 rounded-full font-bold">
+                                    {achievements.length}
+                                </span>
+                            </h2>
+                            <p className="text-[#6D637A] text-[13px] font-medium mt-1">Track your legendary milestones</p>
+                        </div>
+                        <div className="text-right flex flex-col items-end">
+                            <span className="text-[10px] font-extrabold text-[#5BA885] tracking-widest">TOTAL EXP</span>
+                            <span className="text-[14px] font-extrabold text-[#93D334]">{exp.toLocaleString('id-ID')} / {nextLevelExp.toLocaleString('id-ID')}</span>
+                        </div>
                     </div>
 
                     {/* Achievement List */}
                     <div className="px-4 mt-8 flex flex-col gap-6">
                         {isLoading && (
                             <div className="flex justify-center p-10">
-                                <span className="animate-pulse text-[#382654] font-bold">Sedang mengambil data... 🚀</span>
+                                <span className="animate-pulse text-[#382654] font-bold">Fetching data... 🚀</span>
                             </div>
                         )}
                         {!isLoading && achievements.length === 0 && (
                             <div className="flex flex-col items-center p-10 text-center opacity-60">
                                 <span className="text-4xl mb-2">🍃</span>
-                                <p className="text-[#382654] font-bold text-sm">Belum ada achievement yang ditemukan.</p>
-                                <p className="text-[#6D637A] text-xs">Mungkin data di Appwrite masih kosong atau userId tidak cocok.</p>
+                                <p className="text-[#382654] font-bold text-sm">No achievements found.</p>
+                                <p className="text-[#6D637A] text-xs">Appwrite collection might be empty.</p>
                             </div>
                         )}
                         {!isLoading && achievements.map((item, index) => {
@@ -106,23 +162,23 @@ const AchievementPage: NextPage = () => {
                             return (
                                 <div
                                     key={index}
-                                    className="relative bg-white rounded-[32px] p-5 group cursor-pointer transition-transform hover:scale-[1.02] active:scale-95"
+                                    className={`relative bg-white rounded-[32px] p-5 group transition-transform ${isCompleted ? 'hover:scale-[1.02] active:scale-95 cursor-pointer' : 'opacity-90 grayscale-[40%]'}`}
                                     style={{
-                                        border: `3px solid ${item.color}30`,
-                                        borderBottom: `8px solid ${item.color}40`,
-                                        boxShadow: `0 4px 15px ${item.color}15`
+                                        border: `3px solid ${isCompleted ? item.color + '30' : '#E2E8F0'}`,
+                                        borderBottom: `8px solid ${isCompleted ? item.color + '40' : '#CBD5E1'}`,
+                                        boxShadow: `0 4px 15px ${isCompleted ? item.color + '15' : 'rgba(0,0,0,0.02)'}`
                                     }}
                                 >
                                     <div className="flex items-center gap-4">
                                         {/* Playful Icon Container */}
                                         <div
-                                            className="w-20 h-20 rounded-[24px] flex items-center justify-center text-4xl shadow-sm transition-all duration-500 group-hover:-translate-y-2 group-hover:rotate-12 group-hover:scale-110"
+                                            className={`w-20 h-20 rounded-[24px] flex items-center justify-center text-4xl shadow-sm transition-all duration-500 ${isCompleted ? 'group-hover:-translate-y-2 group-hover:rotate-12 group-hover:scale-110' : ''}`}
                                             style={{ 
-                                                backgroundColor: `${item.color}20`,
-                                                border: `3px solid ${item.color}40`
+                                                backgroundColor: isCompleted ? `${item.color}20` : '#F1F5F9',
+                                                border: `3px solid ${isCompleted ? item.color + '40' : '#E2E8F0'}`
                                             }}
                                         >
-                                            <span className="drop-shadow-md">{item.icon}</span>
+                                            <span className={`drop-shadow-md ${!isCompleted && 'opacity-50'}`}>{item.icon}</span>
                                         </div>
 
                                         <div className="flex-1 pb-1">
@@ -130,8 +186,10 @@ const AchievementPage: NextPage = () => {
                                                 <h3 className="text-[#382654] text-[18px] font-black tracking-wide leading-tight">
                                                     {item.title}
                                                 </h3>
-                                                {isCompleted && (
+                                                {isCompleted ? (
                                                     <span className="text-xl animate-bounce">⭐</span>
+                                                ) : (
+                                                    <span className="text-xl opacity-30 grayscale">🔒</span>
                                                 )}
                                             </div>
 
@@ -140,12 +198,12 @@ const AchievementPage: NextPage = () => {
                                             </p>
 
                                             {/* Chunky Candy Progress Bar */}
-                                            <div className="relative w-full h-5 rounded-full overflow-hidden" style={{ backgroundColor: `${item.color}20` }}>
+                                            <div className="relative w-full h-5 rounded-full overflow-hidden" style={{ backgroundColor: isCompleted ? `${item.color}20` : '#F1F5F9' }}>
                                                 <div
                                                     className="absolute inset-y-0 left-0 rounded-full transition-all duration-1000 ease-out flex items-center justify-end px-2"
                                                     style={{
                                                         width: `${percentage}%`,
-                                                        backgroundColor: item.color,
+                                                        backgroundColor: isCompleted ? item.color : '#94A3B8',
                                                     }}
                                                 >
                                                     <div className="w-full h-1/3 bg-white/30 rounded-full absolute top-1 left-2 w-[calc(100%-16px)]" />
@@ -153,10 +211,10 @@ const AchievementPage: NextPage = () => {
                                             </div>
 
                                             <div className="flex justify-between mt-2">
-                                                <span className="text-[11px] font-black tracking-wider uppercase" style={{ color: item.color }}>
-                                                    {item.progress} / {item.total} EXP
+                                                <span className="text-[11px] font-black tracking-wider uppercase" style={{ color: isCompleted ? item.color : '#64748B' }}>
+                                                    {item.progress.toLocaleString('id-ID')} / {item.total.toLocaleString('id-ID')} EXP
                                                 </span>
-                                                <span className="text-[12px] font-black" style={{ color: item.color }}>
+                                                <span className="text-[12px] font-black" style={{ color: isCompleted ? item.color : '#64748B' }}>
                                                     {Math.min(100, Math.round(percentage))}%
                                                 </span>
                                             </div>

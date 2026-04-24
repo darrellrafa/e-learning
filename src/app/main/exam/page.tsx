@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import type { NextPage } from 'next';
 import Link from 'next/link';
 import { Suspense } from 'react';
+import { account } from '../../../lib/appwrite';
 
 interface Question {
   text: string;
@@ -209,7 +210,7 @@ const ExamContent: React.FC = () => {
     };
   })();
 
-  const handleCheck = () => {
+  const handleCheck = async () => {
     if (selectedAnswer === null) return;
 
     const isCorrect = selectedAnswer === question.correct;
@@ -222,8 +223,31 @@ const ExamContent: React.FC = () => {
     } else {
       const timeElapsed = Math.floor((Date.now() - startTime) / 1000);
       const username = localStorage.getItem('dummy_username') || 'guest';
+      
+      const maxExp = 100;
+      const expEarned = Math.round((newScore / questions.length) * maxExp);
+      
       localStorage.setItem(`${username}_node_${nodeId}_completed`, 'true');
-      router.push(`/main/exam/score?score=${newScore}&total=${questions.length}&time=${timeElapsed}&theme=${themeParam || ''}`);
+      const previousExp = parseInt(localStorage.getItem(`${username}_node_${nodeId}_exp`) || '0');
+      const finalExp = Math.max(expEarned, previousExp);
+      localStorage.setItem(`${username}_node_${nodeId}_exp`, finalExp.toString());
+
+      // Sync to Appwrite Cloud
+      try {
+        const prefs = await account.getPrefs();
+        const previousExpCloud = typeof prefs[`node_${nodeId}_exp`] === 'number' ? prefs[`node_${nodeId}_exp`] : parseInt(prefs[`node_${nodeId}_exp`] || '0');
+        const finalExpCloud = Math.max(expEarned, previousExpCloud);
+        
+        await account.updatePrefs({
+          ...prefs,
+          [`node_${nodeId}_completed`]: true,
+          [`node_${nodeId}_exp`]: finalExpCloud
+        });
+      } catch (err) {
+        console.error("Failed to sync progress to Appwrite", err);
+      }
+
+      router.push(`/main/exam/score?score=${newScore}&total=${questions.length}&time=${timeElapsed}&exp=${expEarned}&theme=${themeParam || ''}`);
     }
   };
 

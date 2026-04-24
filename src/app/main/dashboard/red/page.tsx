@@ -6,6 +6,7 @@ import Link from 'next/link';
 import BottomNavigation from '../../../../components/BottomNavigation';
 import ProfileHeader from '../../../../components/ProfileHeader';
 import FloorRed from '../../../../components/floors/FloorRed';
+import { account } from '../../../../lib/appwrite';
 
 const DashboardRed: NextPage = () => {
   const [completedNodes, setCompletedNodes] = useState<number[]>([]);
@@ -13,22 +14,29 @@ const DashboardRed: NextPage = () => {
   const [interest, setInterest] = useState<string>('art');
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const username = localStorage.getItem('dummy_username') || 'guest';
-      if (username.toLowerCase() === 'admin' || username === 'Alex') {
-        setIsStudent1(true);
-      }
-
-      setInterest(localStorage.getItem('dummy_interest') || 'art');
-
-      const completed: number[] = [];
-      for (let i = 1; i <= 8; i++) {
-        if (localStorage.getItem(`${username}_node_${i}_completed`) === 'true') {
-          completed.push(i);
+    const fetchUserData = async () => {
+      try {
+        const user = await account.get();
+        const username = user.name || 'guest';
+        if (username.toLowerCase() === 'admin' || username === 'Alex') {
+          setIsStudent1(true);
         }
+
+        const prefs = await account.getPrefs();
+        setInterest(prefs['interest'] || localStorage.getItem('dummy_interest') || 'art');
+
+        const completed: number[] = [];
+        for (let i = 1; i <= 8; i++) {
+          if (prefs[`node_${i}_completed`] === true || localStorage.getItem(`${username}_node_${i}_completed`) === 'true') {
+            completed.push(i);
+          }
+        }
+        setCompletedNodes(completed);
+      } catch (err) {
+        console.error("Failed to fetch Appwrite user/prefs", err);
       }
-      setCompletedNodes(completed);
-    }
+    };
+    fetchUserData();
   }, []);
 
   const getTheme = (int: string) => {

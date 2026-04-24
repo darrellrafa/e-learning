@@ -9,6 +9,7 @@ import Floor1 from '../../../components/floors/Floor1';
 import Floor2 from '../../../components/floors/Floor2';
 import Floor3 from '../../../components/floors/Floor3';
 import DashboardTutorial from '../../../components/DashboardTutorial';
+import { account } from '../../../lib/appwrite';
 
 const Dashboard: NextPage = () => {
   const [activeFloor, setActiveFloor] = useState<1 | 2 | 3>(1);
@@ -18,40 +19,47 @@ const Dashboard: NextPage = () => {
   const [isStudent1, setIsStudent1] = useState(false);
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const username = localStorage.getItem('dummy_username') || 'guest';
-      const completed: number[] = [];
-      for (let i = 1; i <= 24; i++) {
-        if (localStorage.getItem(`${username}_node_${i}_completed`) === 'true') {
-          completed.push(i);
+    const fetchUserData = async () => {
+      try {
+        const user = await account.get();
+        const username = user.name || 'guest';
+        
+        // Check if testing account
+        if (username.toLowerCase() === 'admin' || username === 'Alex') {
+          setIsStudent1(true);
         }
-      }
-      setCompletedNodes(completed);
 
-      // Check if user needs the tutorial
-      if (localStorage.getItem('dummy_needs_tutorial') === 'true') {
-        setShowTutorial(true);
-      }
+        const prefs = await account.getPrefs();
+        const completed: number[] = [];
+        for (let i = 1; i <= 24; i++) {
+          if (prefs[`node_${i}_completed`] === true || localStorage.getItem(`${username}_node_${i}_completed`) === 'true') {
+            completed.push(i);
+          }
+        }
+        setCompletedNodes(completed);
 
-      // Check if testing account
-      if (username.toLowerCase() === 'admin' || username === 'Alex') {
-        setIsStudent1(true);
+        if (prefs['needs_tutorial'] === true || localStorage.getItem('dummy_needs_tutorial') === 'true') {
+          setShowTutorial(true);
+        }
+      } catch (err) {
+        console.error("Failed to fetch Appwrite user/prefs", err);
       }
-    }
+    };
+    fetchUserData();
   }, []);
 
-  const handleFinishTutorial = () => {
+  const handleFinishTutorial = async () => {
     setShowTutorial(false);
-    localStorage.removeItem('dummy_needs_tutorial'); // Don't show again
+    localStorage.removeItem('dummy_needs_tutorial');
+    try {
+      const prefs = await account.getPrefs();
+      await account.updatePrefs({ ...prefs, needs_tutorial: false });
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const handleFloorChange = (targetFloor: 1 | 2 | 3) => {
-    if (typeof window === 'undefined') return;
-    
-    const username = localStorage.getItem('dummy_username') || 'guest';
-
-    // Bypass for student1 (dummy_username is admin or Alex)
-    const isStudent1 = username.toLowerCase() === 'admin' || username === 'Alex';
     if (isStudent1) {
       setActiveFloor(targetFloor);
       return;
@@ -61,7 +69,7 @@ const Dashboard: NextPage = () => {
       // Must complete 1 to 8
       let allCleared = true;
       for (let i = 1; i <= 8; i++) {
-        if (localStorage.getItem(`${username}_node_${i}_completed`) !== 'true') allCleared = false;
+        if (!completedNodes.includes(i)) allCleared = false;
       }
       if (!allCleared) {
         setErrorMessage("Please complete all lessons in Floor 1 to unlock Floor 2!");
@@ -74,7 +82,7 @@ const Dashboard: NextPage = () => {
       // Must complete 9 to 16
       let allCleared = true;
       for (let i = 9; i <= 16; i++) {
-        if (localStorage.getItem(`${username}_node_${i}_completed`) !== 'true') allCleared = false;
+        if (!completedNodes.includes(i)) allCleared = false;
       }
       if (!allCleared) {
         setErrorMessage("Please complete all lessons in Floor 2 to unlock Floor 3!");
