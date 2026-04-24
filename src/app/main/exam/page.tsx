@@ -12,24 +12,85 @@ interface Question {
   correct: number;
 }
 
-const generateRandomQuestion = (nodeIdStr: string): Question => {
+const generateRandomQuestion = (nodeIdStr: string, isRedTheme: boolean, interest: string): Question => {
   const nodeId = parseInt(nodeIdStr) || 1;
+  
+  if (isRedTheme) {
+    // Trivia Questions based on Interest
+    let qBank: {text: string, options: string[], correct: number}[] = [];
+    
+    if (interest === 'computer') {
+      qBank = [
+        { text: 'Alat untuk mengetik di layar?', options: ['Keyboard', 'Mouse', 'Monitor'], correct: 0 },
+        { text: 'Layar untuk melihat gambar?', options: ['Monitor', 'Keyboard', 'Speaker'], correct: 0 },
+        { text: 'Otak dari komputer adalah?', options: ['CPU', 'Mouse', 'Kabel'], correct: 0 },
+        { text: 'Alat yang digeser untuk klik?', options: ['Mouse', 'Printer', 'Kertas'], correct: 0 },
+        { text: 'Jaringan yang menghubungkan dunia?', options: ['Internet', 'Warnet', 'Satelit'], correct: 0 },
+        { text: 'Suara komputer keluar dari?', options: ['Speaker', 'Layar', 'Keyboard'], correct: 0 },
+        { text: 'Game kotak-kotak yang seru?', options: ['Minecraft', 'Catur', 'Pingpong'], correct: 0 },
+        { text: 'Robot bisa bergerak karena?', options: ['Mesin', 'Sihir', 'Angin'], correct: 0 },
+        { text: 'Alat untuk mencetak kertas?', options: ['Printer', 'Mouse', 'Layar'], correct: 0 }
+      ];
+    } else if (interest === 'sport') {
+      qBank = [
+        { text: 'Bola basket dilempar pakai?', options: ['Tangan', 'Kaki', 'Kepala'], correct: 0 },
+        { text: 'Orang yang meniup peluit?', options: ['Wasit', 'Pemain', 'Penonton'], correct: 0 },
+        { text: 'Olahraga menendang bola?', options: ['Sepak Bola', 'Berenang', 'Senam'], correct: 0 },
+        { text: 'Alat untuk memukul bola tenis?', options: ['Raket', 'Tongkat kasti', 'Tangan'], correct: 0 },
+        { text: 'Pakaian khusus di air?', options: ['Baju Renang', 'Jaket', 'Jas'], correct: 0 },
+        { text: 'Lari sangat cepat disebut?', options: ['Sprint', 'Lompat', 'Jalan santai'], correct: 0 },
+        { text: 'Gol terjadi bila bola masuk?', options: ['Gawang', 'Ring basket', 'Ember'], correct: 0 },
+        { text: 'Kartu tanda pelanggaran berat?', options: ['Kartu Merah', 'Kartu Putih', 'Kartu Hijau'], correct: 0 },
+        { text: 'Tempat bertanding tinju?', options: ['Ring', 'Lapangan', 'Kolam'], correct: 0 }
+      ];
+    } else {
+      // Default to ART
+      qBank = [
+         { text: 'Alat utama untuk menggambar?', options: ['Pensil', 'Sapu', 'Panci'], correct: 0 },
+         { text: 'Warna campuran kuning & biru?', options: ['Hijau', 'Oranye', 'Ungu'], correct: 0 },
+         { text: 'Tempat menaruh dan mencampur cat?', options: ['Palet', 'Piring makan', 'Gelas'], correct: 0 },
+         { text: 'Kuas biasanya terbuat dari?', options: ['Bulu', 'Kertas', 'Batu'], correct: 0 },
+         { text: 'Kertas tebal untuk melukis?', options: ['Kanvas', 'Buku tulis', 'Kardus'], correct: 0 },
+         { text: 'Warna bendera Indonesia?', options: ['Merah Putih', 'Biru Putih', 'Hijau Putih'], correct: 0 },
+         { text: 'Orang yang ahli melukis?', options: ['Pelukis', 'Penari', 'Penyanyi'], correct: 0 },
+         { text: 'Campuran merah & putih jadi?', options: ['Merah Muda', 'Cokelat', 'Hitam'], correct: 0 },
+         { text: 'Bentuk bulan purnama?', options: ['Bulat', 'Kotak', 'Segitiga'], correct: 0 }
+      ];
+    }
+
+    // Pick a random question
+    const q = qBank[Math.floor(Math.random() * qBank.length)];
+    
+    // Shuffle options while tracking correct answer
+    const optionsWithStatus = q.options.map((opt, idx) => ({ label: opt, isCorrect: idx === q.correct }));
+    optionsWithStatus.sort(() => Math.random() - 0.5);
+    
+    const correctVal = optionsWithStatus.findIndex(o => o.isCorrect);
+
+    return {
+      text: q.text,
+      options: optionsWithStatus.map((o, index) => ({
+        label: ['A', 'B', 'C'][index],
+        value: o.label as any // We cheat here because value is normally number, we will just pass string
+      })),
+      correct: optionsWithStatus[correctVal].label as any
+    };
+  }
+
+  // STANDARD EXAM MATH ENGINE (Floors 1-3)
   let num1 = 0;
   let num2 = 0;
   let answer = 0;
   let text = '';
 
   if (nodeId <= 8) {
-    // Floor 1: Addition (nodes 1-8)
     num1 = Math.floor(Math.random() * 10) + 1;
     num2 = Math.floor(Math.random() * 10) + 1;
     answer = num1 + num2;
     text = `${num1} + ${num2} = ...`;
   } else if (nodeId <= 16) {
-    // Floor 2: Subtraction (nodes 9-16)
     num1 = Math.floor(Math.random() * 15) + 5;
     num2 = Math.floor(Math.random() * 10) + 1;
-    // Ensure no negative numbers for kids
     if (num1 < num2) {
        const temp = num1;
        num1 = num2;
@@ -38,7 +99,6 @@ const generateRandomQuestion = (nodeIdStr: string): Question => {
     answer = num1 - num2;
     text = `${num1} - ${num2} = ...`;
   } else {
-    // Floor 3: Advanced/Multiplication (nodes 17-24)
     num1 = Math.floor(Math.random() * 5) + 1;
     num2 = Math.floor(Math.random() * 5) + 1;
     answer = num1 * num2;
@@ -73,14 +133,19 @@ const ExamContent: React.FC = () => {
 
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
+  const [selectedAnswer, setSelectedAnswer] = useState<number | string | null>(null);
   const [score, setScore] = useState(0);
   const [startTime] = useState<number>(Date.now());
+  const [interest, setInterest] = useState<string>('art');
+
+  const isRedTheme = themeParam === 'red';
 
   useEffect(() => {
-    const generated = Array.from({ length: 5 }, () => generateRandomQuestion(nodeId));
+    const currentInterest = localStorage.getItem('dummy_interest') || 'art';
+    setInterest(currentInterest);
+    const generated = Array.from({ length: 5 }, () => generateRandomQuestion(nodeId, isRedTheme, currentInterest));
     setQuestions(generated);
-  }, [nodeId]);
+  }, [nodeId, isRedTheme]);
 
   if (questions.length === 0) return (
     <div className="min-h-screen bg-[#1A2024] flex items-center justify-center text-white font-bold opacity-50 tracking-widest">
@@ -93,37 +158,40 @@ const ExamContent: React.FC = () => {
 
   // Apply a dynamic Boss Theme if this is a Milestone Node (node 4, 8, etc.)
   const isMilestone = parseInt(nodeId) % 4 === 0;
-  const isRedTheme = themeParam === 'red';
 
   const t = (() => {
     if (isRedTheme) {
-      if (isMilestone) {
-        // Red Theme - Boss Mode
-        return {
-          bg: 'bg-[#B71C1C]',
-          track: 'bg-[#981414]',
-          accent: 'bg-[#FFC107]',
-          accentHover: 'hover:bg-[#FFB300]',
-          accentShadow: 'shadow-md',
-          accentText: 'text-[#3E2723]',
-          questionText: 'text-white',
-          optionBg: 'bg-[#E53935]',
-          optionHover: 'hover:bg-[#EF5350]',
-          optionText: 'text-white'
+      if (interest === 'computer') {
+        return isMilestone ? {
+          bg: 'bg-[#1864AB]', track: 'bg-[#0B3156]', accent: 'bg-[#FFC107]',
+          accentHover: 'hover:bg-[#FFB300]', accentShadow: 'shadow-md', accentText: 'text-[#0B3156]',
+          questionText: 'text-white', optionBg: 'bg-[#339AF0]', optionHover: 'hover:bg-[#4DABF7]', optionText: 'text-white'
+        } : {
+          bg: 'bg-[#E7F5FF]', track: 'bg-[#C5E4FF]', accent: 'bg-[#339AF0]',
+          accentHover: 'hover:bg-[#228be6]', accentShadow: 'shadow-sm', accentText: 'text-white',
+          questionText: 'text-[#005bb5]', optionBg: 'bg-white', optionHover: 'hover:bg-[#D0EBFF]', optionText: 'text-[#005bb5]'
+        };
+      } else if (interest === 'sport') {
+        return isMilestone ? {
+          bg: 'bg-[#D9480F]', track: 'bg-[#822100]', accent: 'bg-[#FFC107]',
+          accentHover: 'hover:bg-[#FFB300]', accentShadow: 'shadow-md', accentText: 'text-[#822100]',
+          questionText: 'text-white', optionBg: 'bg-[#FF922B]', optionHover: 'hover:bg-[#FFA94D]', optionText: 'text-white'
+        } : {
+          bg: 'bg-[#FFF4E6]', track: 'bg-[#FFE8CC]', accent: 'bg-[#FF922B]',
+          accentHover: 'hover:bg-[#F76707]', accentShadow: 'shadow-sm', accentText: 'text-white',
+          questionText: 'text-[#D97706]', optionBg: 'bg-white', optionHover: 'hover:bg-[#FFE8CC]', optionText: 'text-[#D97706]'
         };
       }
-      // Red Theme - Normal Node
-      return {
-        bg: 'bg-[#FFEbee]',
-        track: 'bg-[#FFCDD2]',
-        accent: 'bg-[#E53935]',
-        accentHover: 'hover:bg-[#D32F2F]',
-        accentShadow: 'shadow-sm',
-        accentText: 'text-white',
-        questionText: 'text-[#C62828]',
-        optionBg: 'bg-white',
-        optionHover: 'hover:bg-[#FFCDD2]',
-        optionText: 'text-[#C62828]'
+      
+      // Default to Art (Red)
+      return isMilestone ? {
+        bg: 'bg-[#B71C1C]', track: 'bg-[#981414]', accent: 'bg-[#FFC107]',
+        accentHover: 'hover:bg-[#FFB300]', accentShadow: 'shadow-md', accentText: 'text-[#3E2723]',
+        questionText: 'text-white', optionBg: 'bg-[#E53935]', optionHover: 'hover:bg-[#EF5350]', optionText: 'text-white'
+      } : {
+        bg: 'bg-[#FFEbee]', track: 'bg-[#FFCDD2]', accent: 'bg-[#E53935]',
+        accentHover: 'hover:bg-[#D32F2F]', accentShadow: 'shadow-sm', accentText: 'text-white',
+        questionText: 'text-[#C62828]', optionBg: 'bg-white', optionHover: 'hover:bg-[#FFCDD2]', optionText: 'text-[#C62828]'
       };
     }
     // Standard Green/Yellow Theme

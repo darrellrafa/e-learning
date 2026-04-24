@@ -39,7 +39,12 @@ const LOGIN: NextPage = () => {
       // 1. Create Appwrite session
       await account.createEmailPasswordSession(email.trim(), password);
       
-      // 2. Redirect to dashboard
+      // 2. Fetch user to set dummy_username for frontend sync
+      const user = await account.get();
+      localStorage.setItem('dummy_username', user.name || 'guest');
+      localStorage.setItem('dummy_logged_in', 'true');
+      
+      // 3. Redirect to dashboard
       router.push('/main/dashboard');
     } catch (err: any) {
       if (err?.message === 'Creation of a session is prohibited when a session is active.') {

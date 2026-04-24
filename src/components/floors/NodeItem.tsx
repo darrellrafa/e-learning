@@ -14,8 +14,11 @@ interface NodeItemProps {
 export default function NodeItem({ nodeId, top, left, completedNodes, theme, examTheme, isStudent1 }: NodeItemProps) {
   const maxCompleted = completedNodes.length > 0 ? Math.max(...completedNodes) : 0;
   const isCompleted = completedNodes.includes(nodeId);
-  const isCurrent = nodeId === maxCompleted + 1;
-  const isLocked = !isStudent1 && nodeId > maxCompleted + 1;
+  const isLocked = !isStudent1 && nodeId > 1 && !completedNodes.includes(nodeId - 1);
+  
+  // Highlight node if it's the very next one to do (or if it's 1 and none are done)
+  const isCurrent = !isCompleted && (nodeId === 1 || completedNodes.includes(nodeId - 1)) && nodeId >= maxCompleted;
+  
   const isMilestone = nodeId % 4 === 0;
 
   const Component = isLocked ? 'div' : Link;

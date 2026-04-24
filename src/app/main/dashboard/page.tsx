@@ -34,7 +34,7 @@ const Dashboard: NextPage = () => {
       }
 
       // Check if testing account
-      if (username === 'Alex') {
+      if (username.toLowerCase() === 'admin' || username === 'Alex') {
         setIsStudent1(true);
       }
     }
@@ -50,8 +50,8 @@ const Dashboard: NextPage = () => {
     
     const username = localStorage.getItem('dummy_username') || 'guest';
 
-    // Bypass for student1 (dummy_username is Alex)
-    const isStudent1 = username === 'Alex';
+    // Bypass for student1 (dummy_username is admin or Alex)
+    const isStudent1 = username.toLowerCase() === 'admin' || username === 'Alex';
     if (isStudent1) {
       setActiveFloor(targetFloor);
       return;
@@ -141,7 +141,7 @@ const Dashboard: NextPage = () => {
             onClick={() => handleFloorChange(1)}
             className={`${activeFloor === 1
               ? `${theme.cardBg} ${theme.text} pt-6 pb-2.5`
-              : 'bg-white text-[#C3CBC6] py-2 opacity-80'} px-5 rounded-t-[1.3rem] rounded-b-none font-extrabold text-[10px] tracking-widest transition-all duration-300 grow-0 min-w-[85px]`}
+              : 'bg-white text-[#C3CBC6] py-2 opacity-80'} px-5 rounded-t-[1.3rem] rounded-b-none font-extrabold text-[10px] tracking-widest transition-all duration-300 grow-0 min-w-[85px] flex justify-center items-center gap-1`}
           >
             FLOOR 1
           </button>
@@ -149,17 +149,17 @@ const Dashboard: NextPage = () => {
             onClick={() => handleFloorChange(2)}
             className={`${activeFloor === 2
               ? `${theme.cardBg} ${theme.text} pt-6 pb-2.5`
-              : 'bg-white text-[#C3CBC6] py-2 opacity-80'} px-5 rounded-t-[1.3rem] rounded-b-none font-extrabold text-[10px] tracking-widest transition-all duration-300 grow-0 min-w-[85px]`}
+              : 'bg-white text-[#C3CBC6] py-2 opacity-80'} px-5 rounded-t-[1.3rem] rounded-b-none font-extrabold text-[10px] tracking-widest transition-all duration-300 grow-0 min-w-[85px] flex justify-center items-center gap-1`}
           >
-            FLOOR 2
+            FLOOR 2 {!isStudent1 && ![1, 2, 3, 4, 5, 6, 7, 8].every(n => completedNodes.includes(n)) ? '🔒' : ''}
           </button>
           <button
             onClick={() => handleFloorChange(3)}
             className={`${activeFloor === 3
               ? `${theme.cardBg} ${theme.text} pt-6 pb-2.5`
-              : 'bg-white text-[#C3CBC6] py-2 opacity-80'} px-5 rounded-t-[1.3rem] rounded-b-none font-extrabold text-[10px] tracking-widest transition-all duration-300 grow-0 min-w-[85px]`}
+              : 'bg-white text-[#C3CBC6] py-2 opacity-80'} px-5 rounded-t-[1.3rem] rounded-b-none font-extrabold text-[10px] tracking-widest transition-all duration-300 grow-0 min-w-[85px] flex justify-center items-center gap-1`}
           >
-            FLOOR 3
+            FLOOR 3 {!isStudent1 && ![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16].every(n => completedNodes.includes(n)) ? '🔒' : ''}
           </button>
         </div>
 

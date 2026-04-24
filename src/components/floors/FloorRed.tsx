@@ -5,9 +5,10 @@ interface FloorProps {
   completedNodes: number[];
   theme: any;
   isStudent1?: boolean;
+  interest?: string;
 }
 
-export default function FloorRed({ completedNodes, theme, isStudent1 }: FloorProps) {
+export default function FloorRed({ completedNodes, theme, isStudent1, interest = 'art' }: FloorProps) {
   const nodes = [
     { id: 1, top: '0%', left: '50%' },
     { id: 2, top: '13%', left: '30%' },
@@ -22,97 +23,192 @@ export default function FloorRed({ completedNodes, theme, isStudent1 }: FloorPro
   return (
     <div className="relative w-[300px] h-[600px] mt-10 pointer-events-auto">
       
-      {/* Polished Volcano/Magma Environment Decorations */}
-      
-      {/* Floating Embers / Fireflies */}
-      <div className="absolute inset-0 pointer-events-none opacity-80">
-        <div className="absolute top-[10%] left-[25%] w-2 h-2 rounded-full bg-[#FFC107] blur-[1px] animate-pulse"></div>
-        <div className="absolute top-[30%] left-[80%] w-3 h-3 rounded-full bg-[#FF9800] blur-[2px] animate-pulse"></div>
-        <div className="absolute top-[50%] left-[15%] w-2 h-2 rounded-full bg-[#FF5252] blur-[1px]"></div>
-        <div className="absolute top-[70%] left-[85%] w-2 h-2 rounded-full bg-[#FFC107] blur-[1px] animate-pulse"></div>
-        <div className="absolute top-[85%] left-[20%] w-3 h-3 rounded-full bg-[#FF5252] blur-[2px]"></div>
-      </div>
+      {/* ART THEME (Default) Decorations - formerly Magma/Volcano */}
+      {(interest === 'art' || !['computer', 'sport'].includes(interest)) && (
+        <>
+          <div className="absolute top-[20%] left-[75%] pointer-events-none">
+            {/* Paint Palette */}
+            <svg width="45" height="40" viewBox="0 0 50 50">
+               <path d="M 10 40 Q 5 20 20 15 Q 40 10 45 25 Q 50 40 25 45 Q 10 45 10 40 Z" fill="#F48FB1" />
+               <circle cx="20" cy="25" r="3" fill="#D32F2F" />
+               <circle cx="28" cy="20" r="3" fill="#1976D2" />
+               <circle cx="35" cy="25" r="4" fill="#388E3C" />
+               <circle cx="28" cy="32" r="3.5" fill="#FBC02D" />
+            </svg>
+          </div>
+          <div className="absolute top-[60%] left-[8%] pointer-events-none scale-75 rotate-[-15deg]">
+             {/* Brush */}
+            <svg width="45" height="40" viewBox="0 0 50 50">
+               <rect x="20" y="20" width="8" height="25" fill="#795548" rx="2" />
+               <path d="M 20 20 Q 24 5 28 20 Z" fill="#FF5252" />
+               <rect x="18" y="20" width="12" height="5" fill="#B0BEC5" />
+            </svg>
+          </div>
 
-      {/* Magma Boulders */}
-      <div className="absolute top-[20%] left-[75%] pointer-events-none">
-        <svg width="45" height="40" viewBox="0 0 50 50">
-           {/* Dark Rock */}
-           <path d="M 10 40 Q 5 20 20 15 Q 40 10 45 25 Q 50 40 25 45 Q 10 45 10 40 Z" fill="#3E2723" />
-           {/* Glowing magma fissures inside rock */}
-           <path d="M 15 30 L 25 25 L 35 35" stroke="#FF5252" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-           <path d="M 25 25 L 30 15" stroke="#FF9800" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-           {/* Shadow/Highlight */}
-           <path d="M 20 15 Q 40 10 45 25 Q 35 20 20 25 Z" fill="#4E342E" />
-        </svg>
-      </div>
-      <div className="absolute top-[60%] left-[8%] pointer-events-none scale-75 rotate-[-15deg]">
-        <svg width="45" height="40" viewBox="0 0 50 50">
-           <path d="M 5 35 Q 5 15 25 10 Q 45 15 40 35 Q 25 45 5 35 Z" fill="#3E2723" />
-           <path d="M 15 25 L 25 20 L 30 30" stroke="#FF5252" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-        </svg>
-      </div>
+          <div className="absolute top-[8%] left-[15%] pointer-events-none opacity-90 rotate-6">
+            {/* Paint Splatter */}
+            <svg width="70" height="30" viewBox="0 0 100 50">
+              <ellipse cx="50" cy="25" rx="38" ry="10" fill="#E53935" />
+              <circle cx="35" cy="22" r="5" fill="#FF5252" />
+              <circle cx="60" cy="24" r="6" fill="#D32F2F" />
+              <path d="M 70 30 Q 80 40 75 45" stroke="#E53935" strokeWidth="3" strokeLinecap="round" fill="none" />
+            </svg>
+          </div>
 
-      {/* Active Lava Puddles */}
-      <div className="absolute top-[8%] left-[15%] pointer-events-none opacity-90 rotate-6">
-        <svg width="70" height="30" viewBox="0 0 100 50">
-          <ellipse cx="50" cy="25" rx="45" ry="15" fill="#4E342E" />
-          <ellipse cx="50" cy="25" rx="38" ry="10" fill="#E53935" />
-          <ellipse cx="50" cy="25" rx="25" ry="5" fill="#FF9800" />
-          {/* Bubble */}
-          <circle cx="35" cy="22" r="3" fill="#FFC107" />
-          <circle cx="60" cy="24" r="2" fill="#FFC107" />
-        </svg>
-      </div>
-      <div className="absolute top-[42%] left-[65%] pointer-events-none opacity-90 -rotate-6">
-        <svg width="80" height="35" viewBox="0 0 100 50">
-          <ellipse cx="50" cy="25" rx="45" ry="15" fill="#4E342E" />
-          <ellipse cx="50" cy="25" rx="40" ry="12" fill="#E53935" />
-          <ellipse cx="55" cy="25" rx="25" ry="6" fill="#FF9800" />
-          {/* Bubble */}
-          <circle cx="45" cy="24" r="4" fill="#FFC107" />
-          <ellipse cx="70" cy="26" rx="3" ry="2" fill="#FFC107" />
-        </svg>
-      </div>
+          {/* Milestone 1 Graphic - Art Gallery Easel */}
+          <div className="absolute transition-transform duration-500 hover:scale-105 pointer-events-none" style={{ top: '33%', left: '-5%' }}>
+              <svg width="110" height="110" viewBox="0 0 100 100">
+                  {/* Easel Legs */}
+                  <line x1="50" y1="20" x2="30" y2="90" stroke="#5D4037" strokeWidth="4" strokeLinecap="round" />
+                  <line x1="50" y1="20" x2="70" y2="90" stroke="#5D4037" strokeWidth="4" strokeLinecap="round" />
+                  <line x1="50" y1="20" x2="50" y2="85" stroke="#4E342E" strokeWidth="3" strokeLinecap="round" />
+                  {/* Canvas */}
+                  <rect x="25" y="30" width="50" height="40" fill="#FFF" stroke="#E0E0E0" strokeWidth="2" />
+                  <rect x="20" y="70" width="60" height="4" fill="#3E2723" />
+                  {/* Painting */}
+                  <circle cx="40" cy="45" r="10" fill="#FF9800" />
+                  <path d="M 30 65 Q 50 45 70 65 Z" fill="#4CAF50" />
+              </svg>
+          </div>
 
-      {/* Milestone 1 Graphic - Cute Round Volcano */}
-      <div className="absolute transition-transform duration-500 hover:scale-105 pointer-events-none" style={{ top: '33%', left: '-5%' }}>
-          <svg width="130" height="130" viewBox="0 0 100 100">
-              {/* Volcano body */}
-              <path d="M 10 90 L 35 35 C 40 25, 60 25, 65 35 L 90 90 Z" fill="#3E2723" />
-              {/* Volcano highlight/shadow */}
-              <path d="M 50 30 L 65 35 L 90 90 L 50 90 Z" fill="#2D1A11" opacity="0.4" />
-              {/* Crater */}
-              <ellipse cx="50" cy="30" rx="16" ry="6" fill="#1A0F0A" />
-              {/* Lava spill */}
-              <path d="M 38 31 C 38 45, 32 55, 38 65 C 40 75, 45 70, 48 55 C 50 40, 55 55, 60 65 C 65 75, 68 50, 62 31 Z" fill="#FF3D00" />
-              <path d="M 43 32 C 43 40, 48 45, 52 55 C 55 45, 58 35, 57 32 Z" fill="#FFC107" />
-              {/* Smoke Clouds */}
-              <circle cx="45" cy="15" r="8" fill="#BDBDBD" opacity="0.7" />
-              <circle cx="55" cy="10" r="10" fill="#BDBDBD" opacity="0.7" />
-              <circle cx="65" cy="18" r="7" fill="#BDBDBD" opacity="0.7" />
-          </svg>
-      </div>
+          {/* Milestone 2 Graphic - Giant Paint Tube */}
+          <div className="absolute transition-transform duration-500 hover:scale-105 pointer-events-none" style={{ top: '86%', left: '55%' }}>
+            <svg width="100" height="100" viewBox="0 0 100 100">
+                <rect x="40" y="30" width="20" height="40" fill="#E0E0E0" />
+                <polygon points="40,30 60,30 55,20 45,20" fill="#9E9E9E" />
+                <rect x="46" y="15" width="8" height="5" fill="#424242" />
+                <rect x="35" y="70" width="30" height="10" fill="#D32F2F" rx="2" />
+                {/* Oozing Paint */}
+                <path d="M 45 15 Q 50 0 30 10" stroke="#E53935" strokeWidth="6" strokeLinecap="round" fill="none" />
+                <circle cx="28" cy="12" r="3" fill="#E53935" />
+            </svg>
+          </div>
+        </>
+      )}
 
-      {/* Milestone 2 Graphic - Lava Geyser Rock */}
-      <div className="absolute transition-transform duration-500 hover:scale-105 pointer-events-none" style={{ top: '86%', left: '55%' }}>
-        <svg width="120" height="120" viewBox="0 0 100 100">
-            {/* Rock Base Pool */}
-            <ellipse cx="50" cy="85" rx="45" ry="15" fill="#4E342E" />
-            <path d="M 7 85 Q 50 110 93 85" fill="#3E2723" /> {/* Pool depth */}
-            <ellipse cx="50" cy="82" rx="35" ry="10" fill="#E53935" />
-            <ellipse cx="50" cy="82" rx="25" ry="6" fill="#FF9800" />
-            
-            {/* Geyser Eruption */}
-            <path d="M 40 82 C 35 50, 40 30, 50 20 C 60 30, 65 50, 60 82 Z" fill="#FF5252" />
-            <path d="M 45 82 C 43 60, 46 40, 50 30 C 54 40, 57 60, 55 82 Z" fill="#FFC107" />
-            
-            {/* Spray droplets */}
-            <circle cx="45" cy="15" r="3" fill="#FF5252" />
-            <circle cx="58" cy="12" r="2.5" fill="#FF9800" />
-            <circle cx="65" cy="25" r="2" fill="#FFC107" />
-            <circle cx="35" cy="28" r="2" fill="#FF5252" />
-        </svg>
-      </div>
+      {/* COMPUTER THEME Decorations */}
+      {interest === 'computer' && (
+        <>
+          <div className="absolute top-[20%] left-[75%] pointer-events-none">
+            {/* Glowing Chip */}
+            <svg width="45" height="40" viewBox="0 0 50 50">
+               <rect x="15" y="15" width="20" height="20" fill="#1E88E5" rx="3" />
+               <rect x="20" y="20" width="10" height="10" fill="#0D47A1" />
+               <line x1="10" y1="20" x2="15" y2="20" stroke="#90CAF9" strokeWidth="2" />
+               <line x1="10" y1="30" x2="15" y2="30" stroke="#90CAF9" strokeWidth="2" />
+               <line x1="35" y1="20" x2="40" y2="20" stroke="#90CAF9" strokeWidth="2" />
+               <line x1="35" y1="30" x2="40" y2="30" stroke="#90CAF9" strokeWidth="2" />
+            </svg>
+          </div>
+          <div className="absolute top-[60%] left-[8%] pointer-events-none">
+             {/* Abstract Circuit */}
+            <svg width="50" height="50" viewBox="0 0 50 50">
+               <path d="M 10 40 L 20 40 L 30 30 L 30 10" stroke="#64B5F6" strokeWidth="3" fill="none" />
+               <circle cx="30" cy="10" r="4" fill="#1976D2" />
+               <circle cx="10" cy="40" r="3" fill="#42A5F5" />
+               <path d="M 25 45 L 35 45 L 45 35" stroke="#90CAF9" strokeWidth="2" fill="none" />
+            </svg>
+          </div>
+
+          <div className="absolute top-[10%] left-[15%] pointer-events-none opacity-80">
+            {/* Binary floating */}
+            <span className="text-[#1976D2] font-mono text-xs font-bold leading-none">
+              01<br/>10<br/>11
+            </span>
+          </div>
+
+          {/* Milestone 1 Graphic - Desktop PC */}
+          <div className="absolute transition-transform duration-500 hover:scale-105 pointer-events-none" style={{ top: '33%', left: '-5%' }}>
+              <svg width="110" height="110" viewBox="0 0 100 100">
+                  <rect x="20" y="30" width="50" height="35" fill="#424242" rx="4" />
+                  <rect x="23" y="33" width="44" height="29" fill="#1E88E5" />
+                  <rect x="40" y="65" width="10" height="10" fill="#616161" />
+                  <rect x="30" y="75" width="30" height="5" fill="#757575" rx="2" />
+                  <rect x="75" y="30" width="15" height="40" fill="#212121" rx="2" />
+                  <circle cx="82" cy="40" r="3" fill="#64B5F6" />
+                  <circle cx="82" cy="50" r="2" fill="#E0E0E0" />
+              </svg>
+          </div>
+
+          {/* Milestone 2 Graphic - Robot */}
+          <div className="absolute transition-transform duration-500 hover:scale-105 pointer-events-none" style={{ top: '86%', left: '55%' }}>
+            <svg width="110" height="110" viewBox="0 0 100 100">
+                <rect x="35" y="25" width="30" height="25" fill="#B0BEC5" rx="4" />
+                <circle cx="43" cy="35" r="4" fill="#0D47A1" />
+                <circle cx="57" cy="35" r="4" fill="#0D47A1" />
+                <rect x="45" y="42" width="10" height="3" fill="#546E7A" />
+                {/* Antenna */}
+                <line x1="50" y1="25" x2="50" y2="15" stroke="#78909C" strokeWidth="2" />
+                <circle cx="50" cy="13" r="3" fill="#1E88E5" />
+                {/* Body */}
+                <rect x="30" y="55" width="40" height="35" fill="#90A4AE" rx="6" />
+                <rect x="40" y="65" width="20" height="10" fill="#CFD8DC" />
+                <line x1="30" y1="65" x2="20" y2="75" stroke="#B0BEC5" strokeWidth="4" strokeLinecap="round" />
+                <line x1="70" y1="65" x2="80" y2="75" stroke="#B0BEC5" strokeWidth="4" strokeLinecap="round" />
+            </svg>
+          </div>
+        </>
+      )}
+
+      {/* SPORT THEME Decorations */}
+      {interest === 'sport' && (
+        <>
+          <div className="absolute top-[20%] left-[75%] pointer-events-none">
+            {/* Tennis Ball */}
+            <svg width="35" height="35" viewBox="0 0 50 50">
+               <circle cx="25" cy="25" r="20" fill="#CDDC39" />
+               <path d="M 15 5 A 20 20 0 0 0 15 45" stroke="#F0F4C3" strokeWidth="3" fill="none" />
+               <path d="M 35 5 A 20 20 0 0 1 35 45" stroke="#F0F4C3" strokeWidth="3" fill="none" />
+            </svg>
+          </div>
+          <div className="absolute top-[60%] left-[8%] pointer-events-none rotate-12">
+             {/* Bowling Pin */}
+            <svg width="40" height="40" viewBox="0 0 50 50">
+               <path d="M 20 40 Q 15 25 22 15 L 22 10 Q 25 5 28 10 L 28 15 Q 35 25 30 40 Z" fill="#FFF" stroke="#E0E0E0" strokeWidth="2" />
+               <line x1="21" y1="18" x2="29" y2="18" stroke="#F44336" strokeWidth="2" />
+               <line x1="20" y1="21" x2="30" y2="21" stroke="#F44336" strokeWidth="2" />
+            </svg>
+          </div>
+
+          <div className="absolute top-[8%] left-[15%] pointer-events-none opacity-80">
+            {/* Sneaker Track */}
+            <svg width="60" height="20" viewBox="0 0 60 20">
+               <path d="M 5 10 Q 15 0 25 10 T 45 10" stroke="#FFB74D" strokeWidth="3" strokeDasharray="5, 5" fill="none" />
+               <circle cx="50" cy="10" r="2" fill="#E65100" />
+            </svg>
+          </div>
+
+          {/* Milestone 1 Graphic - Basketball Hoop */}
+          <div className="absolute transition-transform duration-500 hover:scale-105 pointer-events-none" style={{ top: '33%', left: '-5%' }}>
+              <svg width="100" height="100" viewBox="0 0 100 100">
+                  {/* Backboard */}
+                  <rect x="25" y="20" width="50" height="35" fill="#FFF" stroke="#E65100" strokeWidth="4" />
+                  <rect x="40" y="35" width="20" height="15" fill="none" stroke="#E65100" strokeWidth="2" />
+                  {/* Pole */}
+                  <rect x="45" y="55" width="10" height="45" fill="#90A4AE" />
+                  {/* Rim */}
+                  <ellipse cx="50" cy="55" rx="15" ry="5" fill="none" stroke="#D84315" strokeWidth="3" />
+                  {/* Net */}
+                  <path d="M 35 55 L 40 75 L 60 75 L 65 55" stroke="#FFF" strokeWidth="2" fill="none" />
+                  <line x1="43" y1="55" x2="45" y2="75" stroke="#FFF" strokeWidth="1" />
+                  <line x1="57" y1="55" x2="55" y2="75" stroke="#FFF" strokeWidth="1" />
+                  <line x1="50" y1="55" x2="50" y2="75" stroke="#FFF" strokeWidth="1" />
+              </svg>
+          </div>
+
+          {/* Milestone 2 Graphic - Trophy */}
+          <div className="absolute transition-transform duration-500 hover:scale-105 pointer-events-none" style={{ top: '86%', left: '55%' }}>
+            <svg width="100" height="100" viewBox="0 0 100 100">
+                <path d="M 25 30 Q 25 60 50 65 Q 75 60 75 30 Z" fill="#FFC107" />
+                <rect x="25" y="20" width="50" height="10" fill="#FFA000" />
+                <path d="M 15 25 A 10 10 0 0 0 25 40" stroke="#FFC107" strokeWidth="4" fill="none" />
+                <path d="M 85 25 A 10 10 0 0 1 75 40" stroke="#FFC107" strokeWidth="4" fill="none" />
+                <rect x="45" y="65" width="10" height="20" fill="#FFA000" />
+                <rect x="35" y="85" width="30" height="10" fill="#5D4037" rx="2" />
+            </svg>
+          </div>
+        </>
+      )}
 
       {nodes.map((node) => (
         <NodeItem key={node.id} nodeId={node.id} top={node.top} left={node.left} completedNodes={completedNodes} theme={theme} examTheme="red" isStudent1={isStudent1} />

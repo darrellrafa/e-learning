@@ -58,6 +58,11 @@ const REGISTER: NextPage = () => {
       // 2. Automatically log them in after registration
       await account.createEmailPasswordSession(email.trim(), password);
 
+      // Fetch user to set dummy_username for frontend sync
+      const user = await account.get();
+      localStorage.setItem('dummy_username', user.name || 'guest');
+      localStorage.setItem('dummy_logged_in', 'true');
+
       // Save initial avatar preferences to localStorage as a fallback
       const avatarColors = ['#F2C296', '#A8D8EA', '#FFD700', '#B5EAD7', '#FFDAC1', '#C7CEEA'];
       const randomColor = avatarColors[Math.floor(Math.random() * avatarColors.length)];

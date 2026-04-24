@@ -25,6 +25,7 @@ const AchievementPage: NextPage = () => {
             try {
                 // 1. Dapatkan info user yang sedang login
                 const user = await account.get();
+                const isAdmin = user.name?.toLowerCase() === 'admin' || user.name === 'Alex';
                 
                 // 2. Ambil data pencapaian dari database
                 const dbId = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!;
@@ -42,7 +43,7 @@ const AchievementPage: NextPage = () => {
                 const fetchedData = response.documents.map((doc: any) => ({
                     title: doc.title,
                     description: doc.description,
-                    progress: doc.progress,
+                    progress: isAdmin ? doc.total : doc.progress,
                     total: doc.total,
                     icon: doc.icon,
                     color: doc.color
