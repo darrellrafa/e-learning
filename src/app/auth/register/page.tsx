@@ -2,7 +2,7 @@
 
 import type { NextPage } from 'next';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { account, ID } from '../../../lib/appwrite';
 import { AppwriteException } from 'appwrite';
@@ -15,6 +15,15 @@ const REGISTER: NextPage = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    // Redirect to dashboard if user is already logged in
+    account.get().then(() => {
+      router.push('/main/dashboard');
+    }).catch(() => {
+      // Not logged in, stay on register page
+    });
+  }, [router]);
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,6 +67,20 @@ const REGISTER: NextPage = () => {
       // 3. Redirect to onboarding flow
       router.push('/onboarding/welcome');
     } catch (err: any) {
+      if (err?.message === 'Creation of a session is prohibited when a session is active.') {
+        try {
+          // If a session already exists, delete it and try logging in again
+          await account.deleteSession('current');
+          await account.createEmailPasswordSession(email.trim(), password);
+          router.push('/onboarding/welcome');
+          return;
+        } catch (retryErr: any) {
+          setError(retryErr.message || 'An unexpected error occurred.');
+          setIsLoading(false);
+          return;
+        }
+      }
+
       if (err instanceof AppwriteException) {
         setError(err.message);
       } else {
