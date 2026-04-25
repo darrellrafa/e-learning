@@ -44,7 +44,22 @@ const LOGIN: NextPage = () => {
       localStorage.setItem('dummy_username', user.name || 'guest');
       localStorage.setItem('dummy_logged_in', 'true');
       
-      // 3. Redirect to dashboard
+      // 3. Sync preferences
+      const prefs = await account.getPrefs();
+      if (prefs.interest) {
+        localStorage.setItem('dummy_interest', prefs.interest);
+      } else {
+        const localInterest = localStorage.getItem('dummy_interest');
+        if (localInterest) {
+          await account.updatePrefs({ ...prefs, interest: localInterest });
+        } else {
+          // If no interest found at all, route to onboarding
+          router.push('/onboarding/interests');
+          return;
+        }
+      }
+
+      // 4. Redirect to dashboard
       router.push('/main/dashboard');
     } catch (err: any) {
       if (err?.message === 'Creation of a session is prohibited when a session is active.') {

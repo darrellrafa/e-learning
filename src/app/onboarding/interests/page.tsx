@@ -5,9 +5,12 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { account } from '../../../lib/appwrite';
 
+import { account } from '../../../lib/appwrite';
+
 const InterestsPage: NextPage = () => {
     const router = useRouter();
     const [selectedInterest, setSelectedInterest] = useState<string | null>(null);
+    const [isLoading, setIsLoading] = useState(false);
 
     const interests = [
         {
@@ -38,17 +41,16 @@ const InterestsPage: NextPage = () => {
 
     const handleConfirm = async () => {
         if (!selectedInterest) return;
+        setIsLoading(true);
         
         try {
-            // Dapatkan preferensi saat ini agar tidak tertimpa
+            // Save to Appwrite preferences
             const currentPrefs = await account.getPrefs();
-            // Simpan interest ke database Appwrite
             await account.updatePrefs({ ...currentPrefs, interest: selectedInterest });
         } catch (error) {
-            console.error('Failed to save interest to Appwrite:', error);
+            console.error('Failed to save interest to preferences:', error);
         }
 
-        // Simpan juga ke local storage sebagai fallback/cache sementara
         localStorage.setItem('dummy_interest', selectedInterest);
         localStorage.setItem('dummy_needs_tutorial', 'true'); // Show tutorial when entering dashboard
         router.push('/main/dashboard');
@@ -103,10 +105,10 @@ const InterestsPage: NextPage = () => {
             <div className="w-full max-w-sm mt-8">
                 <button 
                     onClick={handleConfirm}
-                    disabled={!selectedInterest}
+                    disabled={!selectedInterest || isLoading}
                     className="w-full bg-[#FFCC00] text-white font-black text-[18px] tracking-widest rounded-full py-5 shadow-[0_6px_0_#D9A000] hover:bg-[#F2C003] active:translate-y-2 active:shadow-none transition-all disabled:opacity-40 disabled:active:translate-y-0 disabled:active:shadow-[0_6px_0_#D9A000]"
                 >
-                    LET'S GO! 🎉
+                    {isLoading ? 'SAVING...' : "LET'S GO! 🎉"}
                 </button>
             </div>
 

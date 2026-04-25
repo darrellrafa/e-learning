@@ -125,6 +125,11 @@ const ProfilePage: NextPage = () => {
   const handleLogout = async () => {
     try {
       await account.deleteSession('current');
+      localStorage.removeItem('dummy_username');
+      localStorage.removeItem('dummy_interest');
+      localStorage.removeItem('dummy_avatar_color');
+      localStorage.removeItem('dummy_avatar_type');
+      localStorage.removeItem('dummy_logged_in');
       router.push('/auth/login');
     } catch(err) {
       console.error(err);
