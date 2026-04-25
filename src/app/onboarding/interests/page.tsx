@@ -3,6 +3,7 @@
 import type { NextPage } from 'next';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { account } from '../../../lib/appwrite';
 
 const InterestsPage: NextPage = () => {
     const router = useRouter();
@@ -35,8 +36,19 @@ const InterestsPage: NextPage = () => {
         }
     ];
 
-    const handleConfirm = () => {
+    const handleConfirm = async () => {
         if (!selectedInterest) return;
+        
+        try {
+            // Dapatkan preferensi saat ini agar tidak tertimpa
+            const currentPrefs = await account.getPrefs();
+            // Simpan interest ke database Appwrite
+            await account.updatePrefs({ ...currentPrefs, interest: selectedInterest });
+        } catch (error) {
+            console.error('Failed to save interest to Appwrite:', error);
+        }
+
+        // Simpan juga ke local storage sebagai fallback/cache sementara
         localStorage.setItem('dummy_interest', selectedInterest);
         localStorage.setItem('dummy_needs_tutorial', 'true'); // Show tutorial when entering dashboard
         router.push('/main/dashboard');

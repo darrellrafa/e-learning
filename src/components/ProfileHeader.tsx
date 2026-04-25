@@ -12,7 +12,7 @@ interface ProfileHeaderProps {
 export default function ProfileHeader({ themeTextClass }: ProfileHeaderProps) {
   const pathname = usePathname();
   const router = useRouter();
-  
+
   const [username, setUsername] = useState<string>('Loading...');
   const [avatarColor, setAvatarColor] = useState<string>('#F2C296');
   const [avatarType, setAvatarType] = useState<string>('classic');
@@ -26,14 +26,14 @@ export default function ProfileHeader({ themeTextClass }: ProfileHeaderProps) {
       try {
         const user = await account.get();
         setUsername(user.name || 'Student');
-        
+
         // Avatars can still use localStorage temporarily for styling 
         setAvatarColor(localStorage.getItem('dummy_avatar_color') || '#F2C296');
         setAvatarType(localStorage.getItem('dummy_avatar_type') || 'classic');
 
         const prefs = await account.getPrefs();
         setInterest(prefs['interest'] || localStorage.getItem('dummy_interest') || 'art');
-      } catch(err) {
+      } catch (err) {
         setUsername('Guest');
         setInterest(localStorage.getItem('dummy_interest') || 'art');
       }
@@ -57,7 +57,7 @@ export default function ProfileHeader({ themeTextClass }: ProfileHeaderProps) {
       color: '#339AF0',
       icon: (
         <svg width="28" height="28" viewBox="0 0 24 24" fill="#339AF0">
-          <path d="M20 18c1.1 0 1.99-.9 1.99-2L22 6c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2H0v2h24v-2h-4zM4 6h16v10H4V6z"/>
+          <path d="M20 18c1.1 0 1.99-.9 1.99-2L22 6c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2H0v2h24v-2h-4zM4 6h16v10H4V6z" />
         </svg>
       ),
     },
@@ -66,8 +66,8 @@ export default function ProfileHeader({ themeTextClass }: ProfileHeaderProps) {
       color: '#FF922B',
       icon: (
         <svg width="28" height="28" viewBox="0 0 24 24" fill="#FF922B">
-          <circle cx="12" cy="12" r="10"/>
-          <path d="M12 2L12 22M2 12L22 12M5.5 5.5L18.5 18.5M18.5 5.5L5.5 18.5" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+          <circle cx="12" cy="12" r="10" />
+          <path d="M12 2L12 22M2 12L22 12M5.5 5.5L18.5 18.5M18.5 5.5L5.5 18.5" stroke="white" strokeWidth="2" strokeLinecap="round" />
         </svg>
       ),
     },
@@ -76,7 +76,7 @@ export default function ProfileHeader({ themeTextClass }: ProfileHeaderProps) {
       color: '#E53935',
       icon: (
         <svg width="28" height="28" viewBox="0 0 24 24" fill="#E53935">
-          <path d="M12 2C6.49 2 2 6.49 2 12s4.49 10 9.95 10c1.38 0 2.5-1.12 2.5-2.5 0-.61-.23-1.17-.64-1.61-.4-.41-.65-.96-.65-1.57 0-1.21.99-2.2 2.2-2.2H19c2.76 0 5-2.24 5-5 0-4.42-5.37-8.12-12-8.12zM6.5 11.5c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3-4c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm5 0c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3 4c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/>
+          <path d="M12 2C6.49 2 2 6.49 2 12s4.49 10 9.95 10c1.38 0 2.5-1.12 2.5-2.5 0-.61-.23-1.17-.64-1.61-.4-.41-.65-.96-.65-1.57 0-1.21.99-2.2 2.2-2.2H19c2.76 0 5-2.24 5-5 0-4.42-5.37-8.12-12-8.12zM6.5 11.5c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3-4c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm5 0c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3 4c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z" />
         </svg>
       ),
     },
@@ -88,12 +88,12 @@ export default function ProfileHeader({ themeTextClass }: ProfileHeaderProps) {
     <>
       <div className="w-full sm:max-w-md px-6 pt-12 pb-1 flex items-center justify-between">
         <div className="flex items-center gap-4">
-          
+
           {/* Dynamic Character Avatar */}
-          <DynamicAvatar 
-            type={avatarType} 
-            color={avatarColor} 
-            className="w-16 h-16 rounded-xl shadow-md border-2 border-white/20" 
+          <DynamicAvatar
+            type={avatarType}
+            color={avatarColor}
+            className="w-16 h-16 rounded-xl shadow-md border-2 border-white/20"
           />
 
           <div className="flex flex-col gap-1">
@@ -122,7 +122,7 @@ export default function ProfileHeader({ themeTextClass }: ProfileHeaderProps) {
           ) : (
             // Show math icon when on math path
             <svg width="28" height="28" viewBox="0 0 24 24" fill="#329D66">
-              <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>
+              <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z" />
             </svg>
           )}
         </button>
@@ -133,9 +133,9 @@ export default function ProfileHeader({ themeTextClass }: ProfileHeaderProps) {
         <div className="fixed inset-0 z-[999] flex items-center justify-center px-6" onClick={() => setShowPathModal(false)}>
           {/* Backdrop */}
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
-          
+
           {/* Modal Card */}
-          <div 
+          <div
             className="relative bg-white rounded-[2rem] p-6 w-full max-w-sm shadow-2xl animate-[modalPop_0.3s_ease-out]"
             onClick={(e) => e.stopPropagation()}
           >
@@ -146,15 +146,14 @@ export default function ProfileHeader({ themeTextClass }: ProfileHeaderProps) {
               {/* Math Path Option */}
               <button
                 onClick={() => handleSelectPath('math')}
-                className={`w-full p-5 rounded-[24px] flex items-center gap-4 transition-all text-left ${
-                  !isOnInterestPath
+                className={`w-full p-5 rounded-[24px] flex items-center gap-4 transition-all text-left ${!isOnInterestPath
                     ? 'bg-[#E5F7E7] ring-2 ring-[#329D66] scale-[1.02]'
                     : 'bg-gray-50 hover:bg-[#E5F7E7] hover:scale-[1.01]'
-                }`}
+                  }`}
               >
                 <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-sm ${!isOnInterestPath ? 'bg-[#329D66]' : 'bg-[#E5F7E7]'}`}>
                   <svg width="28" height="28" viewBox="0 0 24 24" fill={!isOnInterestPath ? 'white' : '#329D66'}>
-                    <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>
+                    <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z" />
                   </svg>
                 </div>
                 <div>
@@ -169,11 +168,10 @@ export default function ProfileHeader({ themeTextClass }: ProfileHeaderProps) {
               {/* Interest Path Option */}
               <button
                 onClick={() => handleSelectPath('interest')}
-                className={`w-full p-5 rounded-[24px] flex items-center gap-4 transition-all text-left ${
-                  isOnInterestPath
+                className={`w-full p-5 rounded-[24px] flex items-center gap-4 transition-all text-left ${isOnInterestPath
                     ? `ring-2 scale-[1.02]`
                     : 'bg-gray-50 hover:scale-[1.01]'
-                }`}
+                  }`}
                 style={{
                   backgroundColor: isOnInterestPath ? `${currentInterest.color}15` : undefined,
                   borderColor: isOnInterestPath ? currentInterest.color : undefined,
