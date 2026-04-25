@@ -12,14 +12,20 @@ interface NodeItemProps {
 }
 
 export default function NodeItem({ nodeId, top, left, completedNodes, theme, examTheme, isStudent1 }: NodeItemProps) {
-  const maxCompleted = completedNodes.length > 0 ? Math.max(...completedNodes) : 0;
   const isCompleted = completedNodes.includes(nodeId);
-  const isLocked = !isStudent1 && nodeId > 1 && !completedNodes.includes(nodeId - 1);
   
-  // Highlight node if it's the very next one to do (or if it's 1 and none are done)
-  const isCurrent = !isCompleted && (nodeId === 1 || completedNodes.includes(nodeId - 1)) && nodeId >= maxCompleted;
+  // A node is locked if it's not the very first node AND the previous node hasn't been completed
+  // For floor-first nodes (1, 9, 17), they check the last node of the previous floor
+  const isFirstNodeOverall = nodeId === 1;
+  const isLocked = !isStudent1 && !isFirstNodeOverall && !completedNodes.includes(nodeId - 1);
+  
+  // Highlight node if it's the very next one to do
+  const isCurrent = !isCompleted && !isLocked;
   
   const isMilestone = nodeId % 4 === 0;
+
+  // Display number: show relative position within floor (1-8 instead of 9-16)
+  const displayNumber = ((nodeId - 1) % 8) + 1;
 
   const Component = isLocked ? 'div' : Link;
   const hrefProp = isLocked ? {} : { href: `/main/exam?id=${nodeId}${examTheme ? `&theme=${examTheme}` : ''}` };
@@ -55,7 +61,7 @@ export default function NodeItem({ nodeId, top, left, completedNodes, theme, exa
           <path d="M12 .587l3.668 7.431 8.2 1.192-5.934 5.787 1.401 8.168L12 19.263l-7.335 3.856 1.401-8.168-5.934-5.787 8.2-1.192z" />
         </svg>
       ) : (
-        <span className={isCurrent ? theme.text : "text-white"}>{nodeId}</span>
+        <span className={isCurrent ? theme.text : "text-white"}>{displayNumber}</span>
       )}
     </Component>
   );
