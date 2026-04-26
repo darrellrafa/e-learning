@@ -169,20 +169,20 @@ export default function ProfileHeader({ themeTextClass }: ProfileHeaderProps) {
               <button
                 onClick={() => handleSelectPath('interest')}
                 className={`w-full p-5 rounded-[24px] flex items-center gap-4 transition-all text-left ${isOnInterestPath
-                    ? `ring-2 scale-[1.02]`
+                    ? 'scale-[1.02]'
                     : 'bg-gray-50 hover:scale-[1.01]'
                   }`}
                 style={{
                   backgroundColor: isOnInterestPath ? `${currentInterest.color}15` : undefined,
                   borderColor: isOnInterestPath ? currentInterest.color : undefined,
-                  ringColor: isOnInterestPath ? currentInterest.color : undefined,
+                  boxShadow: isOnInterestPath ? `0 0 0 2px ${currentInterest.color}` : undefined,
                 }}
               >
                 <div
                   className="w-14 h-14 rounded-2xl flex items-center justify-center shadow-sm"
                   style={{ backgroundColor: isOnInterestPath ? currentInterest.color : `${currentInterest.color}20` }}
                 >
-                  {React.cloneElement(currentInterest.icon as React.ReactElement, {
+                  {React.cloneElement(currentInterest.icon as React.ReactElement<any>, {
                     fill: isOnInterestPath ? 'white' : currentInterest.color,
                   })}
                 </div>

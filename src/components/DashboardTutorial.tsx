@@ -29,7 +29,7 @@ export default function DashboardTutorial({ onFinish }: DashboardTutorialProps) 
         </div>
 
         <h2 className="text-[#382654] font-black text-2xl mt-6 mb-2 text-center tracking-wide">
-          How to Play!
+          How to Play!aqaaz
         </h2>
         <p className="text-[#AAA4B3] text-sm font-bold text-center mb-6">
           Read this before you start your adventure.

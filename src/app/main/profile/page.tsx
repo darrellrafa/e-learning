@@ -7,7 +7,16 @@ import { useRouter } from 'next/navigation';
 import BottomNavigation from '../../../components/BottomNavigation';
 import ProfileHeader from '../../../components/ProfileHeader';
 import DynamicAvatar from '../../../components/DynamicAvatar';
-import { account } from '../../../lib/appwrite';
+import { account, databases } from '../../../lib/appwrite';
+
+interface AchievementData {
+    title: string;
+    description: string;
+    progress: number;
+    total: number;
+    icon: string;
+    color: string;
+}
 
 const ProfilePage: NextPage = () => {
   const [username, setUsername] = useState<string>('Loading...');
@@ -16,6 +25,8 @@ const ProfilePage: NextPage = () => {
   const [exp, setExp] = useState<number>(0);
   const [level, setLevel] = useState<number>(1);
   const [nextLevelExp, setNextLevelExp] = useState<number>(400);
+  const [recentAchievements, setRecentAchievements] = useState<AchievementData[]>([]);
+  const [isLoadingAchievements, setIsLoadingAchievements] = useState<boolean>(true);
 
   const router = useRouter();
 
@@ -52,6 +63,57 @@ const ProfilePage: NextPage = () => {
         setExp(currentExp);
         setLevel(calculatedLevel);
         setNextLevelExp(calculatedNextLevelExp);
+
+        // Fetch Achievements
+        try {
+            const dbId = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!;
+            const collId = process.env.NEXT_PUBLIC_APPWRITE_COLLECTION_ACHIEVEMENTS_ID!;
+            
+            const response = await databases.listDocuments(dbId, collId, []);
+
+            let uniqueDocuments: any[] = [];
+            const seenTitles = new Set();
+            for (const doc of response.documents) {
+                if (!seenTitles.has(doc.title)) {
+                    seenTitles.add(doc.title);
+                    uniqueDocuments.push(doc);
+                }
+            }
+
+            if (uniqueDocuments.length === 0) {
+                uniqueDocuments = [
+                    { title: "Great Beginner", description: "Complete your first lesson.", total: 100, icon: "🌱", color: "#93D334" },
+                    { title: "Knowledge Explorer", description: "Collect 500 EXP from various materials.", total: 500, icon: "🧭", color: "#3B82F6" },
+                    { title: "Star Student", description: "Collect 1,000 EXP and become the star of the class.", total: 1000, icon: "🏆", color: "#FFCB05" },
+                    { title: "Master of Knowledge", description: "Reach a total of 2,400 EXP.", total: 2400, icon: "👑", color: "#8B5CF6" }
+                ];
+            }
+
+            const fetchedData = uniqueDocuments.map((doc: any) => ({
+                title: doc.title,
+                description: doc.description,
+                progress: Math.min(currentExp, doc.total),
+                total: doc.total,
+                icon: doc.icon,
+                color: doc.color
+            }));
+
+            // Sort so highest progress percentage is top
+            fetchedData.sort((a, b) => {
+                const aCompleted = a.progress >= a.total ? 1 : 0;
+                const bCompleted = b.progress >= b.total ? 1 : 0;
+                if (aCompleted !== bCompleted) return bCompleted - aCompleted;
+                const aPercent = a.progress / a.total;
+                const bPercent = b.progress / b.total;
+                return bPercent - aPercent;
+            });
+
+            setRecentAchievements(fetchedData.slice(0, 1));
+        } catch (err) {
+            console.error("Failed to fetch achievements:", err);
+        } finally {
+            setIsLoadingAchievements(false);
+        }
       } catch (err) {
         console.error('Session not found', err);
         router.push('/auth/login');
@@ -147,21 +209,36 @@ const ProfilePage: NextPage = () => {
               </div>
 
               <div className="flex flex-col gap-4">
-                {/* Achievement Item 1 */}
-                <div className="flex items-center gap-4 bg-[#F0FDF4] p-4 rounded-3xl border-2 border-[#93D334]/20 shadow-sm relative overflow-hidden">
-                  <div className="absolute -right-4 -bottom-4 text-5xl opacity-10">🌟</div>
-                  <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-3xl shadow-sm border-2 border-[#93D334]/20">
-                    🏆
+                {isLoadingAchievements ? (
+                  <div className="flex justify-center p-4">
+                    <span className="animate-pulse text-[#382654] font-bold text-sm">Loading achievements...</span>
                   </div>
-                  <div className="flex flex-col flex-grow relative z-10">
-                    <h3 className="text-[#382654] text-[15px] font-black">Star Student</h3>
-                    <div className="w-full h-3 bg-white rounded-full overflow-hidden mt-1.5 border border-[#93D334]/30">
-                       <div className="w-[70%] h-full bg-[#FFCD00] rounded-full flex items-center overflow-hidden">
-                          <div className="w-full h-full bg-[linear-gradient(45deg,rgba(255,255,255,0.2)25%,transparent_25%,transparent_50%,rgba(255,255,255,0.2)_50%,rgba(255,255,255,0.2)_75%,transparent_75%,transparent_100%)] bg-[length:10px_10px]" />
-                       </div>
-                    </div>
-                  </div>
-                </div>
+                ) : recentAchievements.length === 0 ? (
+                  <div className="text-center text-sm text-gray-500 py-4">No recent achievements</div>
+                ) : (
+                  recentAchievements.map((item, idx) => {
+                    const percentage = Math.min(100, (item.progress / item.total) * 100);
+                    return (
+                      <div key={idx} className="flex items-center gap-4 p-4 rounded-3xl border-2 shadow-sm relative overflow-hidden"
+                           style={{ borderColor: `${item.color}40`, backgroundColor: `${item.color}10` }}>
+                        <div className="absolute -right-4 -bottom-4 text-5xl opacity-10">{item.icon}</div>
+                        <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-3xl shadow-sm border-2"
+                             style={{ borderColor: `${item.color}40` }}>
+                          <span className="drop-shadow-sm">{item.icon}</span>
+                        </div>
+                        <div className="flex flex-col flex-grow relative z-10">
+                          <h3 className="text-[#382654] text-[15px] font-black">{item.title}</h3>
+                          <div className="w-full h-3 bg-white rounded-full overflow-hidden mt-1.5 border" style={{ borderColor: `${item.color}30` }}>
+                             <div className="h-full rounded-full flex items-center overflow-hidden transition-all duration-1000"
+                                  style={{ width: `${percentage}%`, backgroundColor: item.color }}>
+                                <div className="w-full h-full bg-[linear-gradient(45deg,rgba(255,255,255,0.2)25%,transparent_25%,transparent_50%,rgba(255,255,255,0.2)_50%,rgba(255,255,255,0.2)_75%,transparent_75%,transparent_100%)] bg-[length:10px_10px]" />
+                             </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
               </div>
             </div>
 
