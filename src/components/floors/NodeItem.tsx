@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import React from 'react';
+import { getNodeSubject, getSubjectEmoji } from '../../lib/standardQuestions';
 
 interface NodeItemProps {
   nodeId: number;
@@ -61,7 +62,9 @@ export default function NodeItem({ nodeId, top, left, completedNodes, theme, exa
           <path d="M12 .587l3.668 7.431 8.2 1.192-5.934 5.787 1.401 8.168L12 19.263l-7.335 3.856 1.401-8.168-5.934-5.787 8.2-1.192z" />
         </svg>
       ) : (
-        <span className={isCurrent ? theme.text : "text-white"}>{displayNumber}</span>
+        <span className={isCurrent ? theme.text : "text-white"}>
+          {!examTheme ? getSubjectEmoji(getNodeSubject(nodeId)) : displayNumber}
+        </span>
       )}
     </Component>
   );

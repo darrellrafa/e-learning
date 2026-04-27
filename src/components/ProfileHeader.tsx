@@ -41,14 +41,29 @@ export default function ProfileHeader({ themeTextClass }: ProfileHeaderProps) {
     fetchHeaderUser();
   }, []);
 
-  const handleSelectPath = (path: 'math' | 'interest') => {
+  const handleSelectPath = async (path: 'math' | 'interest' | 'computer' | 'sport' | 'art') => {
     setShowPathModal(false);
     if (path === 'math') {
       router.push('/main/dashboard');
     } else {
+      if (path !== 'interest') {
+        // Admin selected a specific interest path
+        setInterest(path);
+        try {
+          const prefs = await account.getPrefs();
+          await account.updatePrefs({ ...prefs, interest: path });
+        } catch (err) {
+          localStorage.setItem('dummy_interest', path);
+        }
+        // Force reload to update dashboard state completely
+        window.location.href = '/main/dashboard/red';
+        return;
+      }
       router.push('/main/dashboard/red');
     }
   };
+
+  const isAdmin = username.toLowerCase() === 'admin' || username === 'Alex';
 
   // Interest icon & label mapping
   const interestConfig: Record<string, { icon: React.ReactNode; label: string; color: string }> = {
@@ -157,47 +172,91 @@ export default function ProfileHeader({ themeTextClass }: ProfileHeaderProps) {
                   </svg>
                 </div>
                 <div>
-                  <h3 className="text-[17px] font-black text-[#329D66] tracking-wide">MATH</h3>
-                  <p className="text-[#868E96] font-bold text-[12px]">Numbers & Calculations</p>
+                  <h3 className="text-[17px] font-black text-[#329D66] tracking-wide">GENERAL</h3>
+                  <p className="text-[#868E96] font-bold text-[12px]">Math, English & Science</p>
                 </div>
                 {!isOnInterestPath && (
                   <span className="ml-auto text-[#329D66] font-black text-xs bg-[#329D66]/10 px-3 py-1 rounded-full">ACTIVE</span>
                 )}
               </button>
 
-              {/* Interest Path Option */}
-              <button
-                onClick={() => handleSelectPath('interest')}
-                className={`w-full p-5 rounded-[24px] flex items-center gap-4 transition-all text-left ${isOnInterestPath
-                    ? 'scale-[1.02]'
-                    : 'bg-gray-50 hover:scale-[1.01]'
-                  }`}
-                style={{
-                  backgroundColor: isOnInterestPath ? `${currentInterest.color}15` : undefined,
-                  borderColor: isOnInterestPath ? currentInterest.color : undefined,
-                  boxShadow: isOnInterestPath ? `0 0 0 2px ${currentInterest.color}` : undefined,
-                }}
-              >
-                <div
-                  className="w-14 h-14 rounded-2xl flex items-center justify-center shadow-sm"
-                  style={{ backgroundColor: isOnInterestPath ? currentInterest.color : `${currentInterest.color}20` }}
+              {/* Interest Path Option(s) */}
+              {isAdmin ? (
+                // Show all interests for admin
+                Object.keys(interestConfig).map((intKey) => {
+                  const conf = interestConfig[intKey];
+                  const isActive = isOnInterestPath && interest === intKey;
+                  return (
+                    <button
+                      key={intKey}
+                      onClick={() => handleSelectPath(intKey as any)}
+                      className={`w-full p-5 rounded-[24px] flex items-center gap-4 transition-all text-left ${isActive
+                          ? 'scale-[1.02]'
+                          : 'bg-gray-50 hover:scale-[1.01]'
+                        }`}
+                      style={{
+                        backgroundColor: isActive ? `${conf.color}15` : undefined,
+                        borderColor: isActive ? conf.color : undefined,
+                        boxShadow: isActive ? `0 0 0 2px ${conf.color}` : undefined,
+                      }}
+                    >
+                      <div
+                        className="w-14 h-14 rounded-2xl flex items-center justify-center shadow-sm"
+                        style={{ backgroundColor: isActive ? conf.color : `${conf.color}20` }}
+                      >
+                        {React.cloneElement(conf.icon as React.ReactElement<any>, {
+                          fill: isActive ? 'white' : conf.color,
+                        })}
+                      </div>
+                      <div>
+                        <h3 className="text-[17px] font-black tracking-wide" style={{ color: conf.color }}>
+                          {conf.label.toUpperCase()}
+                        </h3>
+                        <p className="text-[#868E96] font-bold text-[12px]">Admin Access</p>
+                      </div>
+                      {isActive && (
+                        <span className="ml-auto font-black text-xs px-3 py-1 rounded-full" style={{ color: conf.color, backgroundColor: `${conf.color}15` }}>
+                          ACTIVE
+                        </span>
+                      )}
+                    </button>
+                  );
+                })
+              ) : (
+                // Normal user: show only their chosen interest
+                <button
+                  onClick={() => handleSelectPath('interest')}
+                  className={`w-full p-5 rounded-[24px] flex items-center gap-4 transition-all text-left ${isOnInterestPath
+                      ? 'scale-[1.02]'
+                      : 'bg-gray-50 hover:scale-[1.01]'
+                    }`}
+                  style={{
+                    backgroundColor: isOnInterestPath ? `${currentInterest.color}15` : undefined,
+                    borderColor: isOnInterestPath ? currentInterest.color : undefined,
+                    boxShadow: isOnInterestPath ? `0 0 0 2px ${currentInterest.color}` : undefined,
+                  }}
                 >
-                  {React.cloneElement(currentInterest.icon as React.ReactElement<any>, {
-                    fill: isOnInterestPath ? 'white' : currentInterest.color,
-                  })}
-                </div>
-                <div>
-                  <h3 className="text-[17px] font-black tracking-wide" style={{ color: currentInterest.color }}>
-                    {currentInterest.label.toUpperCase()}
-                  </h3>
-                  <p className="text-[#868E96] font-bold text-[12px]">Your chosen interest</p>
-                </div>
-                {isOnInterestPath && (
-                  <span className="ml-auto font-black text-xs px-3 py-1 rounded-full" style={{ color: currentInterest.color, backgroundColor: `${currentInterest.color}15` }}>
-                    ACTIVE
-                  </span>
-                )}
-              </button>
+                  <div
+                    className="w-14 h-14 rounded-2xl flex items-center justify-center shadow-sm"
+                    style={{ backgroundColor: isOnInterestPath ? currentInterest.color : `${currentInterest.color}20` }}
+                  >
+                    {React.cloneElement(currentInterest.icon as React.ReactElement<any>, {
+                      fill: isOnInterestPath ? 'white' : currentInterest.color,
+                    })}
+                  </div>
+                  <div>
+                    <h3 className="text-[17px] font-black tracking-wide" style={{ color: currentInterest.color }}>
+                      {currentInterest.label.toUpperCase()}
+                    </h3>
+                    <p className="text-[#868E96] font-bold text-[12px]">Your chosen interest</p>
+                  </div>
+                  {isOnInterestPath && (
+                    <span className="ml-auto font-black text-xs px-3 py-1 rounded-full" style={{ color: currentInterest.color, backgroundColor: `${currentInterest.color}15` }}>
+                      ACTIVE
+                    </span>
+                  )}
+                </button>
+              )}
             </div>
 
             {/* Close Button */}

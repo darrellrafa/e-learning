@@ -5,8 +5,6 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { account } from '../../../lib/appwrite';
 
-import { account } from '../../../lib/appwrite';
-
 const InterestsPage: NextPage = () => {
     const router = useRouter();
     const [selectedInterest, setSelectedInterest] = useState<string | null>(null);
