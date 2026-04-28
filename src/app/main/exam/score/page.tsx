@@ -2,7 +2,7 @@
 
 import { useRouter, useSearchParams } from 'next/navigation';
 import type { NextPage } from 'next';
-import { Suspense } from 'react';
+import { Suspense, useState, useEffect } from 'react';
 
 function ScoreContent() {
   const router = useRouter();
@@ -13,11 +13,64 @@ function ScoreContent() {
   const time = searchParams.get('time') || '0';
   const expEarned = searchParams.get('exp') || Math.round((parseInt(score) / parseInt(total)) * 100).toString();
   const themeParam = searchParams.get('theme');
+  const nodeId = searchParams.get('nodeId') || '1';
+
+  const [aiFeedback, setAiFeedback] = useState<string>('');
+  const [isAiLoading, setIsAiLoading] = useState<boolean>(true);
+
+  useEffect(() => {
+    const fetchAiFeedback = async () => {
+      try {
+        const recentStr = localStorage.getItem('recent_wrong_answers');
+        if (!recentStr || recentStr === '[]') {
+          setAiFeedback("Wow, you answered everything correctly! Keep up the great work! 🌟");
+          setIsAiLoading(false);
+          return;
+        }
+
+        const recentWrong = JSON.parse(recentStr);
+        let prompt = "";
+
+        if (nodeId === '4' || nodeId === '8') {
+          prompt = `The user just completed a review quiz of past materials. They struggled with the following questions:\n`;
+          recentWrong.forEach((item: any, idx: number) => {
+            prompt += `${idx+1}. Question: ${item.question.text}\nTheir answer: ${item.selected}\nCorrect answer: ${item.question.correct}\n\n`;
+          });
+          prompt += `Provide a brief summary of their weaknesses and give specific, motivating study recommendations to strengthen those areas. Keep it concise and use bullet points.`;
+        } else {
+          prompt = `The user just incorrectly answered the following questions in their quiz:\n`;
+          recentWrong.forEach((item: any, idx: number) => {
+            prompt += `${idx+1}. Question: ${item.question.text}\nTheir answer: ${item.selected}\nCorrect answer: ${item.question.correct}\n\n`;
+          });
+          prompt += `Explain briefly and simply why the correct answer is right, and tell them how to solve it. Speak like a friendly and motivating tutor.`;
+        }
+
+        const res = await fetch('/api/ai', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prompt })
+        });
+        
+        const data = await res.json();
+        if (data.text) {
+          setAiFeedback(data.text);
+        } else {
+          setAiFeedback("An error occurred while loading the AI explanation.");
+        }
+      } catch (e) {
+        setAiFeedback("Failed to load AI explanation.");
+      } finally {
+        setIsAiLoading(false);
+      }
+    };
+
+    fetchAiFeedback();
+  }, [nodeId]);
 
   const totalExp = `+${expEarned}`;
 
-  // We change the message dynamically based on the score!
   const isPerfect = parseInt(score) === parseInt(total);
+  const isPassed = parseInt(score) >= 3;
 
   const handleContinue = () => {
     const destination = themeParam === 'red' ? '/main/dashboard/red' : '/main/dashboard';
@@ -25,7 +78,7 @@ function ScoreContent() {
   };
 
   return (
-    <div className="min-h-screen bg-[#E2F4FA] flex justify-center items-center relative font-sans overflow-hidden">
+    <div className="min-h-screen bg-[#E2F4FA] flex flex-col items-center relative font-sans overflow-y-auto pt-20 pb-20 px-4">
 
       {/* Decorative floating bubbles */}
       <div className="absolute top-10 left-10 w-24 h-24 bg-white/40 rounded-full animate-pulse" />
@@ -36,18 +89,18 @@ function ScoreContent() {
       <div className="w-[320px] bg-white rounded-[40px] relative z-10 flex flex-col items-center px-6 pt-12 pb-8 shadow-sm border border-gray-100">
 
         {/* Mascot / Trophy Icon */}
-        <div className="absolute -top-14 w-28 h-28 bg-[#FFCB05] rounded-full border-8 border-[#E2F4FA] flex items-center justify-center shadow-xl animate-bounce" style={{ animationDuration: '2s' }}>
-          <span className="text-5xl">{isPerfect ? '🌟' : '🎉'}</span>
+        <div className={`absolute -top-14 w-28 h-28 ${isPassed ? 'bg-[#FFCB05]' : 'bg-[#FF5252]'} rounded-full border-8 border-[#E2F4FA] flex items-center justify-center shadow-xl animate-bounce`} style={{ animationDuration: '2s' }}>
+          <span className="text-5xl">{isPerfect ? '🌟' : isPassed ? '🎉' : '💔'}</span>
         </div>
 
         {/* Title */}
         <h2 className="text-[#382654] text-[26px] font-black text-center tracking-wide uppercase mt-4">
-          {isPerfect ? 'Perfect!' : 'Great Job!'}
+          {isPerfect ? 'Perfect!' : isPassed ? 'Great Job!' : 'Try Again!'}
         </h2>
 
         {/* Subtitle */}
-        <p className="text-[#6D637A] text-[14px] font-bold text-center mt-2 mb-8">
-          {isPerfect ? 'You got everything right!' : 'Keep learning every day!'}
+        <p className="text-[#6D637A] text-[14px] font-bold text-center mt-2 mb-8 px-4">
+          {isPerfect ? 'You got everything right!' : isPassed ? 'Keep learning every day!' : 'You need at least 3 correct answers to pass and unlock the next lesson.'}
         </p>
 
         {/* Stats: EXP + TIME side by side */}
@@ -81,6 +134,26 @@ function ScoreContent() {
         </button>
 
       </div>
+
+      {/* AI Feedback Card */}
+      <div className="w-[320px] bg-white rounded-[40px] relative z-10 flex flex-col px-6 pt-6 pb-8 shadow-sm border border-gray-100 mt-6">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-10 h-10 bg-[#7E52B1] rounded-full flex justify-center items-center text-white text-xl">🤖</div>
+          <h3 className="text-[#382654] font-black text-lg">AI Tutor</h3>
+        </div>
+        {isAiLoading ? (
+          <div className="flex flex-col gap-2 animate-pulse">
+            <div className="h-4 bg-gray-200 rounded w-full"></div>
+            <div className="h-4 bg-gray-200 rounded w-5/6"></div>
+            <div className="h-4 bg-gray-200 rounded w-4/6"></div>
+          </div>
+        ) : (
+          <div className="text-[#6D637A] text-sm font-medium leading-relaxed whitespace-pre-wrap">
+            {aiFeedback}
+          </div>
+        )}
+      </div>
+
     </div>
   );
 }

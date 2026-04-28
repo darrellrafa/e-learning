@@ -11,12 +11,27 @@ import { getStandardQuestions, getNodeSubject, getSubjectLabel, getSubjectEmoji 
 
 interface Question {
   text: string;
-  options: { label: string; value: number }[];
-  correct: number;
+  options: { label: string; value: number | string }[];
+  correct: number | string;
 }
 
-const generateRandomQuestion = (nodeIdStr: string, isRedTheme: boolean, interest: string): Question => {
+const generateRandomQuestion = (nodeIdStr: string, isRedTheme: boolean, interest: string, allWrongQuestions: Question[] = []): Question => {
   const nodeId = parseInt(nodeIdStr) || 1;
+
+  if ((nodeId === 4 || nodeId === 8) && allWrongQuestions.length > 0) {
+    const q = allWrongQuestions[Math.floor(Math.random() * allWrongQuestions.length)];
+    
+    // Shuffle options to keep it fresh
+    const shuffledOptions = [...q.options].sort(() => Math.random() - 0.5);
+    shuffledOptions.forEach((opt, index) => {
+      opt.label = ['A', 'B', 'C'][index];
+    });
+
+    return {
+      ...q,
+      options: shuffledOptions,
+    };
+  }
   
   if (isRedTheme) {
     // Progressive Interest Questions from bank
@@ -103,13 +118,24 @@ const ExamContent: React.FC = () => {
   const [score, setScore] = useState(0);
   const [startTime] = useState<number>(Date.now());
   const [interest, setInterest] = useState<string>('art');
+  const [recentWrongAnswers, setRecentWrongAnswers] = useState<{question: Question, selected: any}[]>([]);
 
   const isRedTheme = themeParam === 'red';
 
   useEffect(() => {
     const currentInterest = localStorage.getItem('dummy_interest') || 'art';
     setInterest(currentInterest);
-    const generated = Array.from({ length: 5 }, () => generateRandomQuestion(nodeId, isRedTheme, currentInterest));
+    
+    let allWrongQuestions: Question[] = [];
+    try {
+      const allWrongStr = localStorage.getItem('all_wrong_answers');
+      if (allWrongStr) {
+        const parsed = JSON.parse(allWrongStr);
+        allWrongQuestions = parsed.map((item: any) => item.question);
+      }
+    } catch(e) {}
+
+    const generated = Array.from({ length: 5 }, () => generateRandomQuestion(nodeId, isRedTheme, currentInterest, allWrongQuestions));
     setQuestions(generated);
   }, [nodeId, isRedTheme]);
 
@@ -181,6 +207,11 @@ const ExamContent: React.FC = () => {
     const isCorrect = selectedAnswer === question.correct;
     const newScore = score + (isCorrect ? 1 : 0);
     
+    // Track wrong answers
+    if (!isCorrect) {
+      setRecentWrongAnswers(prev => [...prev, { question, selected: selectedAnswer }]);
+    }
+    
     if (currentIndex < questions.length - 1) {
       setScore(newScore);
       setCurrentIndex((prev) => prev + 1);
@@ -191,8 +222,12 @@ const ExamContent: React.FC = () => {
       
       const maxExp = 100;
       const expEarned = Math.round((newScore / questions.length) * maxExp);
+      const passed = newScore >= 3;
       
-      localStorage.setItem(`${username}_node_${nodeId}_completed`, 'true');
+      if (passed) {
+        localStorage.setItem(`${username}_node_${nodeId}_completed`, 'true');
+      }
+      
       const previousExp = parseInt(localStorage.getItem(`${username}_node_${nodeId}_exp`) || '0');
       const finalExp = Math.max(expEarned, previousExp);
       localStorage.setItem(`${username}_node_${nodeId}_exp`, finalExp.toString());
@@ -203,16 +238,38 @@ const ExamContent: React.FC = () => {
         const previousExpCloud = typeof prefs[`node_${nodeId}_exp`] === 'number' ? prefs[`node_${nodeId}_exp`] : parseInt(prefs[`node_${nodeId}_exp`] || '0');
         const finalExpCloud = Math.max(expEarned, previousExpCloud);
         
+        const updates: any = {
+          [`node_${nodeId}_exp`]: finalExpCloud
+        };
+        
+        if (passed) {
+          updates[`node_${nodeId}_completed`] = true;
+        }
+
         await account.updatePrefs({
           ...prefs,
-          [`node_${nodeId}_completed`]: true,
-          [`node_${nodeId}_exp`]: finalExpCloud
+          ...updates
         });
       } catch (err) {
         console.error("Failed to sync progress to Appwrite", err);
       }
 
-      router.push(`/main/exam/score?score=${newScore}&total=${questions.length}&time=${timeElapsed}&exp=${expEarned}&theme=${themeParam || ''}`);
+      // Save wrong answers
+      localStorage.setItem('recent_wrong_answers', JSON.stringify(recentWrongAnswers));
+      
+      let allWrong = [];
+      try {
+        allWrong = JSON.parse(localStorage.getItem('all_wrong_answers') || '[]');
+      } catch(e) {}
+      
+      // If it's a milestone, maybe clear old wrong answers or just keep appending? Let's just keep a max of 50 to avoid bloat
+      let updatedAllWrong = [...allWrong, ...recentWrongAnswers];
+      if (updatedAllWrong.length > 50) {
+        updatedAllWrong = updatedAllWrong.slice(updatedAllWrong.length - 50);
+      }
+      localStorage.setItem('all_wrong_answers', JSON.stringify(updatedAllWrong));
+
+      router.push(`/main/exam/score?score=${newScore}&total=${questions.length}&time=${timeElapsed}&exp=${expEarned}&theme=${themeParam || ''}&nodeId=${nodeId}`);
     }
   };
 
