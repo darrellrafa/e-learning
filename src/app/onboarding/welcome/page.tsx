@@ -52,7 +52,7 @@ const WelcomePage: NextPage = () => {
         {/* Welcome Text */}
         <div className="bg-white px-8 py-6 rounded-[32px] shadow-lg text-center w-full mb-8 border-b-8 border-r-8 border-[#FFCB05]">
           <h1 className="text-[26px] font-black text-[#382654] leading-tight mb-3">
-            Welcome to the <br/><span className="text-[#6D40AA]">Smart World!</span>
+            Welcome to <br/><span className="text-[#6D40AA]">Level Up!</span>
           </h1>
           <p className="text-[#6D637A] text-[15px] font-bold leading-relaxed">
             Before we begin your adventure, let's warm up your brain! Are you ready?
