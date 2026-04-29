@@ -7,9 +7,11 @@ interface FloorProps {
   theme: any;
   isStudent1?: boolean;
   interest?: string;
+  isTrialPath?: boolean;
+  onUnlockRequest?: () => void;
 }
 
-export default function FloorRed({ floor = 1, completedNodes, theme, isStudent1, interest = 'art' }: FloorProps) {
+export default function FloorRed({ floor = 1, completedNodes, theme, isStudent1, interest = 'art', isTrialPath = false, onUnlockRequest }: FloorProps) {
   // Calculate node IDs based on floor
   const baseId = (floor - 1) * 8;
   const nodes = [
@@ -195,7 +197,18 @@ export default function FloorRed({ floor = 1, completedNodes, theme, isStudent1,
       )}
 
       {nodes.map((node) => (
-        <NodeItem key={node.id} nodeId={node.id} top={node.top} left={node.left} completedNodes={completedNodes} theme={theme} examTheme="red" isStudent1={isStudent1} />
+        <NodeItem 
+          key={node.id} 
+          nodeId={node.id} 
+          top={node.top} 
+          left={node.left} 
+          completedNodes={completedNodes} 
+          theme={theme} 
+          examTheme="red" 
+          isStudent1={isStudent1} 
+          isTrialPath={isTrialPath}
+          onUnlockRequest={onUnlockRequest}
+        />
       ))}
     </div>
   );

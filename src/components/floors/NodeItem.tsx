@@ -10,15 +10,22 @@ interface NodeItemProps {
   theme: any;
   examTheme?: string;
   isStudent1?: boolean;
+  isTrialPath?: boolean;
+  onUnlockRequest?: () => void;
 }
 
-export default function NodeItem({ nodeId, top, left, completedNodes, theme, examTheme, isStudent1 }: NodeItemProps) {
+export default function NodeItem({ nodeId, top, left, completedNodes, theme, examTheme, isStudent1, isTrialPath, onUnlockRequest }: NodeItemProps) {
   const isCompleted = completedNodes.includes(nodeId);
   
-  // A node is locked if it's not the very first node AND the previous node hasn't been completed
-  // For floor-first nodes (1, 9, 17), they check the last node of the previous floor
   const isFirstNodeOverall = nodeId === 1;
-  const isLocked = !isStudent1 && !isFirstNodeOverall && !completedNodes.includes(nodeId - 1);
+  
+  // Normal lock logic: not student1, not first node, and previous node not completed
+  const isNormalLocked = !isStudent1 && !isFirstNodeOverall && !completedNodes.includes(nodeId - 1);
+  
+  // Trial path lock logic: node > 1 and it's a trial path
+  const isTrialLocked = !isStudent1 && isTrialPath && nodeId > 1;
+  
+  const isLocked = isNormalLocked || isTrialLocked;
   
   // Highlight node if it's the very next one to do
   const isCurrent = !isCompleted && !isLocked;
@@ -28,19 +35,31 @@ export default function NodeItem({ nodeId, top, left, completedNodes, theme, exa
   // Display number: show relative position within floor (1-8 instead of 9-16)
   const displayNumber = ((nodeId - 1) % 8) + 1;
 
-  const Component = isLocked ? 'div' : Link;
-  const hrefProp = isLocked ? {} : { href: `/main/exam?id=${nodeId}${examTheme ? `&theme=${examTheme}` : ''}` };
+  let Component: any = Link;
+  let elementProps: any = { href: `/main/exam?id=${nodeId}${examTheme ? '&theme=' + examTheme : ''}` };
+
+  if (isLocked) {
+    if (isTrialLocked) {
+      Component = 'button';
+      elementProps = { onClick: onUnlockRequest };
+    } else {
+      Component = 'div';
+      elementProps = {};
+    }
+  }
 
   return (
     <Component
-      {...hrefProp as any}
+      {...elementProps}
       className={`group absolute w-[60px] h-[60px] rounded-full transition-all duration-300 flex items-center justify-center font-extrabold text-xl z-10 -translate-x-1/2
-        ${!isLocked ? 'cursor-pointer hover:scale-110' : 'cursor-not-allowed saturate-0 opacity-60'}
+        ${!isLocked ? 'cursor-pointer hover:scale-110' : ''}
+        ${isTrialLocked ? 'cursor-pointer hover:scale-110 saturate-50' : ''}
+        ${isNormalLocked && !isTrialLocked ? 'cursor-not-allowed saturate-0 opacity-60' : ''}
         ${isCompleted || isCurrent
           ? `${theme.currentNode} text-[#1A2024] shadow-[0_4px_10px_rgba(0,0,0,0.1)]`
           : isMilestone
             ? `bg-white ${theme.text} shadow-[0_4px_10px_rgba(0,0,0,0.1)]`
-            : `${theme.node} ${!isLocked ? theme.nodeHover : ''} text-white shadow-sm`
+            : `${theme.node} ${(!isLocked || isTrialLocked) ? theme.nodeHover : ''} text-white shadow-sm`
         }
       `}
       style={{ top, left }}
@@ -65,6 +84,13 @@ export default function NodeItem({ nodeId, top, left, completedNodes, theme, exa
         <span className={isCurrent ? theme.text : "text-white"}>
           {!examTheme ? getSubjectEmoji(getNodeSubject(nodeId)) : displayNumber}
         </span>
+      )}
+
+      {/* Trial Path Lock Overlay Overlay */}
+      {isTrialLocked && (
+        <div className="absolute -top-1 -right-1 bg-white rounded-full p-1 shadow-md">
+          <span className="text-[10px] leading-none">💎</span>
+        </div>
       )}
     </Component>
   );
