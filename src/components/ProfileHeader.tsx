@@ -9,7 +9,7 @@ interface ProfileHeaderProps {
   themeTextClass: string;
 }
 
-export default function ProfileHeader({ themeTextClass }: ProfileHeaderProps) {
+export function ProfileHeaderContent({ themeTextClass }: ProfileHeaderProps) {
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -301,3 +301,10 @@ export default function ProfileHeader({ themeTextClass }: ProfileHeaderProps) {
   );
 }
 
+export default function ProfileHeader(props: ProfileHeaderProps) {
+  return (
+    <React.Suspense fallback={<div className="w-full h-[88px] flex items-center px-6 pt-12 pb-1" />}>
+      <ProfileHeaderContent {...props} />
+    </React.Suspense>
+  );
+}
